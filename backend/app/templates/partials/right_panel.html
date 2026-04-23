@@ -1,0 +1,67 @@
+<aside class="right-panel" id="right-panel">
+  <div class="panel-header">
+    <span class="panel-title">Cong cu</span>
+  </div>
+
+  <div class="tool-list">
+    <button
+      class="btn btn-tool"
+      hx-post="/web/tools/summary"
+      hx-target="#right-panel"
+      hx-swap="outerHTML"
+    >Tom tat tai lieu</button>
+    <button
+      class="btn btn-tool"
+      hx-post="/web/tools/quiz"
+      hx-target="#right-panel"
+      hx-swap="outerHTML"
+    >Tao quiz ngan</button>
+    <button
+      class="btn btn-tool"
+      hx-get="/web/chat/panel"
+      hx-target="#chat-panel"
+      hx-swap="outerHTML"
+    >Tai lai chat</button>
+  </div>
+
+  {% if tool_title %}
+    <div class="tool-output">
+      <div class="tool-output-header">
+        <span>{{ tool_title }}</span>
+      </div>
+      <div class="tool-output-body">
+        {% if tool_body %}
+          {{ tool_body }}
+        {% else %}
+          {% for quiz in recent_quizzes %}
+            {{ loop.index }}. {{ quiz.question }}
+            {% for option in quiz.options %}
+              - {{ option }}
+            {% endfor %}
+
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="stats-block">
+    <p class="stats-title">// session</p>
+    <div class="stat-row">
+      <span class="stat-label">tai lieu</span>
+      <span class="stat-val">{{ progress.total_documents }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">chat</span>
+      <span class="stat-val">{{ progress.total_chats }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">quiz</span>
+      <span class="stat-val">{{ progress.total_quizzes }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">accuracy</span>
+      <span class="stat-val">{{ progress.accuracy }}%</span>
+    </div>
+  </div>
+</aside>

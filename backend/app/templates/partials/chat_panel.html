@@ -1,0 +1,44 @@
+<main class="main-panel" id="chat-panel">
+  <div class="panel-header">
+    <span class="panel-title">AI Chat</span>
+    <span class="chat-context">
+      {% if active_document %}
+        dang hoi theo: {{ active_document.title }}
+      {% else %}
+        dang hoi khong context tai lieu
+      {% endif %}
+    </span>
+  </div>
+
+  <div class="chat-window">
+    {% if chat_history %}
+      {% for item in chat_history %}
+        <div class="msg {% if item.role == 'user' %}msg-user{% else %}msg-ai{% endif %}">
+          <span class="msg-icon">{% if item.role == 'user' %}&rsaquo;{% else %}AI{% endif %}</span>
+          <div class="msg-body">{{ item.content }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="msg msg-ai">
+        <span class="msg-icon">AI</span>
+        <div class="msg-body">Xin chao. Chon tai lieu ben trai roi dat cau hoi de backend tra loi that.</div>
+      </div>
+    {% endif %}
+  </div>
+
+  <form
+    class="chat-input-bar"
+    hx-post="/web/chat"
+    hx-target="#chat-panel"
+    hx-swap="outerHTML"
+  >
+    <textarea
+      name="message"
+      class="chat-textarea"
+      placeholder="Nhap cau hoi..."
+      rows="2"
+      required
+    ></textarea>
+    <button class="btn btn-send" type="submit">Hoi AI</button>
+  </form>
+</main>
