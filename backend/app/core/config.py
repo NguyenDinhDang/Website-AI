@@ -39,7 +39,18 @@ class Settings(BaseSettings):
             return [o.strip() for o in v.split(",") if o.strip()]
         return v
 
-    model_config = {"env_file": ".env", "case_sensitive": True}
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug(cls, v):
+        if isinstance(v, str):
+            value = v.strip().lower()
+            if value in {"1", "true", "yes", "on", "debug", "development"}:
+                return True
+            if value in {"0", "false", "no", "off", "release", "prod", "production"}:
+                return False
+        return v
+
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
 
 settings = Settings()

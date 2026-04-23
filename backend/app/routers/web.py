@@ -96,6 +96,7 @@ async def _build_page_context(
         "recent_quizzes": recent_quizzes,
         "tool_title": None,
         "tool_body": None,
+        "auth_error": None,
     }
 
 
@@ -108,7 +109,10 @@ async def index(
 ):
     user = await _get_user_from_access_token(access_token, db)
     if not user:
-        return templates.TemplateResponse("index.html", {"request": request, "user": None})
+        return templates.TemplateResponse(
+            "index.html",
+            {"request": request, "user": None, "auth_error": None},
+        )
 
     context = await _build_page_context(request, db, user, active_document_id)
     return templates.TemplateResponse("index.html", context)
@@ -121,7 +125,14 @@ async def web_login(
     password: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
-    tokens = await auth_service.login(email, password, db)
+    try:
+        tokens = await auth_service.login(email, password, db)
+    except AppException as exc:
+        return templates.TemplateResponse(
+            "partials/auth_shell.html",
+            {"request": request, "auth_error": exc.detail},
+            status_code=exc.status_code,
+        )
     user = await _get_user_from_access_token(tokens.access_token, db)
 
     rendered = templates.TemplateResponse(
@@ -142,11 +153,18 @@ async def web_register(
     full_name: str = Form(default=""),
     db: AsyncSession = Depends(get_db),
 ):
-    await auth_service.register(
-        RegisterRequest(email=email, username=username, password=password, full_name=full_name),
-        db,
-    )
-    tokens = await auth_service.login(email, password, db)
+    try:
+        await auth_service.register(
+            RegisterRequest(email=email, username=username, password=password, full_name=full_name),
+            db,
+        )
+        tokens = await auth_service.login(email, password, db)
+    except AppException as exc:
+        return templates.TemplateResponse(
+            "partials/auth_shell.html",
+            {"request": request, "auth_error": exc.detail},
+            status_code=exc.status_code,
+        )
     user = await _get_user_from_access_token(tokens.access_token, db)
 
     rendered = templates.TemplateResponse(
@@ -173,7 +191,7 @@ async def select_document(
     user: User = Depends(get_web_user),
 ):
     context = await _build_page_context(request, db, user, doc_id)
-    rendered = templates.TemplateResponse("partials/sidebar.html", context)
+    rendered = templates.TemplateResponse("partials/workspace.html", context)
     rendered.set_cookie("active_document_id", str(doc_id), samesite="lax", path="/")
     return rendered
 
@@ -187,7 +205,7 @@ async def upload_document(
 ):
     doc = await document_service.upload_document(file, user.id, db)
     context = await _build_page_context(request, db, user, doc.id)
-    rendered = templates.TemplateResponse("partials/sidebar.html", context)
+    rendered = templates.TemplateResponse("partials/workspace.html", context)
     rendered.set_cookie("active_document_id", str(doc.id), samesite="lax", path="/")
     return rendered
 
@@ -203,7 +221,7 @@ async def delete_document(
     await document_service.delete_document(doc_id, user.id, db)
     next_active = None if active_document_id == doc_id else active_document_id
     context = await _build_page_context(request, db, user, next_active)
-    rendered = templates.TemplateResponse("partials/sidebar.html", context)
+    rendered = templates.TemplateResponse("partials/workspace.html", context)
     if next_active:
         rendered.set_cookie("active_document_id", str(next_active), samesite="lax", path="/")
     else:
@@ -221,7 +239,10 @@ async def web_chat(
 ):
     clean_message = message.strip()
     if not clean_message:
-        raise AppException(400, "Message cannot be empty")
+        context = await _build_page_context(request, db, user, active_document_id)
+        context["tool_title"] = "Thong bao"
+        context["tool_body"] = "Hay nhap cau hoi truoc khi gui."
+        return templates.TemplateResponse("partials/workspace.html", context, status_code=400)
 
     await chat_service.handle_chat(
         ChatRequest(message=clean_message, document_id=active_document_id),
@@ -229,7 +250,7 @@ async def web_chat(
         db,
     )
     context = await _build_page_context(request, db, user, active_document_id)
-    return templates.TemplateResponse("partials/chat_panel.html", context)
+    return templates.TemplateResponse("partials/workspace.html", context)
 
 
 @router.post("/web/tools/summary", response_class=HTMLResponse)
@@ -239,14 +260,16 @@ async def summarize_document(
     user: User = Depends(get_web_user),
     active_document_id: int | None = Cookie(default=None),
 ):
+    context = await _build_page_context(request, db, user, active_document_id)
     if not active_document_id:
-        raise AppException(400, "Choose a document before summarizing")
+        context["tool_title"] = "Thong bao"
+        context["tool_body"] = "Chon mot tai lieu truoc khi tom tat."
+        return templates.TemplateResponse("partials/workspace.html", context, status_code=400)
 
     summary = await summarize_service.summarize_document(active_document_id, user.id, db)
-    context = await _build_page_context(request, db, user, active_document_id)
     context["tool_title"] = "Tom tat tai lieu"
     context["tool_body"] = summary.summary
-    return templates.TemplateResponse("partials/right_panel.html", context)
+    return templates.TemplateResponse("partials/workspace.html", context)
 
 
 @router.post("/web/tools/quiz", response_class=HTMLResponse)
@@ -256,8 +279,11 @@ async def generate_quiz(
     user: User = Depends(get_web_user),
     active_document_id: int | None = Cookie(default=None),
 ):
+    context = await _build_page_context(request, db, user, active_document_id)
     if not active_document_id:
-        raise AppException(400, "Choose a document before generating quiz")
+        context["tool_title"] = "Thong bao"
+        context["tool_body"] = "Chon mot tai lieu truoc khi tao quiz."
+        return templates.TemplateResponse("partials/workspace.html", context, status_code=400)
 
     await quiz_service.generate_quiz(
         QuizRequest(document_id=active_document_id, num_questions=3),
@@ -266,7 +292,7 @@ async def generate_quiz(
     )
     context = await _build_page_context(request, db, user, active_document_id)
     context["tool_title"] = "Quiz moi"
-    return templates.TemplateResponse("partials/right_panel.html", context)
+    return templates.TemplateResponse("partials/workspace.html", context)
 
 
 @router.get("/web/chat/panel", response_class=HTMLResponse)
@@ -277,7 +303,7 @@ async def chat_panel(
     active_document_id: int | None = Cookie(default=None),
 ):
     context = await _build_page_context(request, db, user, active_document_id)
-    return templates.TemplateResponse("partials/chat_panel.html", context)
+    return templates.TemplateResponse("partials/workspace.html", context)
 
 
 @router.get("/web/right-panel", response_class=HTMLResponse)
@@ -288,4 +314,4 @@ async def right_panel(
     active_document_id: int | None = Cookie(default=None),
 ):
     context = await _build_page_context(request, db, user, active_document_id)
-    return templates.TemplateResponse("partials/right_panel.html", context)
+    return templates.TemplateResponse("partials/workspace.html", context)

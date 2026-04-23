@@ -7,6 +7,9 @@
     </div>
 
     <div class="auth-grid">
+      {% if auth_error %}
+        <div class="auth-alert">{{ auth_error }}</div>
+      {% endif %}
       <form
         class="auth-card"
         hx-post="/web/auth/login"

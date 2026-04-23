@@ -8,7 +8,7 @@
     <form
       hx-post="/web/documents"
       hx-encoding="multipart/form-data"
-      hx-target="#sidebar-panel"
+      hx-target="#workspace-shell"
       hx-swap="outerHTML"
     >
       <label class="btn btn-upload" for="fileInput">+ them tai lieu</label>
@@ -24,7 +24,7 @@
           <button
             class="file-select"
             hx-post="/web/documents/select/{{ doc.id }}"
-            hx-target="#sidebar-panel"
+            hx-target="#workspace-shell"
             hx-swap="outerHTML"
           >
             <span class="file-icon">{{ doc.file_type|upper }}</span>
@@ -33,7 +33,7 @@
           <button
             class="file-remove"
             hx-delete="/web/documents/{{ doc.id }}"
-            hx-target="#sidebar-panel"
+            hx-target="#workspace-shell"
             hx-swap="outerHTML"
           >x</button>
         </div>
