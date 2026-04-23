@@ -1,0 +1,45 @@
+<aside class="sidebar" id="sidebar-panel">
+  <div class="panel-header">
+    <span class="panel-title">Tai lieu</span>
+    <span class="doc-count badge">{{ documents_total }}</span>
+  </div>
+
+  <div class="upload-zone">
+    <form
+      hx-post="/web/documents"
+      hx-encoding="multipart/form-data"
+      hx-target="#workspace-shell"
+      hx-swap="outerHTML"
+    >
+      <label class="btn btn-upload" for="fileInput">+ them tai lieu</label>
+      <input id="fileInput" name="file" type="file" accept=".pdf,.txt,.docx,.md" onchange="this.form.requestSubmit()" hidden>
+      <p class="upload-hint">PDF / TXT / DOCX / MD</p>
+    </form>
+  </div>
+
+  <div class="file-list">
+    {% if documents %}
+      {% for doc in documents %}
+        <div class="file-item {% if doc.id == active_document_id %}active{% endif %}">
+          <button
+            class="file-select"
+            hx-post="/web/documents/select/{{ doc.id }}"
+            hx-target="#workspace-shell"
+            hx-swap="outerHTML"
+          >
+            <span class="file-icon">{{ doc.file_type|upper }}</span>
+            <span class="file-name">{{ doc.title }}</span>
+          </button>
+          <button
+            class="file-remove"
+            hx-delete="/web/documents/{{ doc.id }}"
+            hx-target="#workspace-shell"
+            hx-swap="outerHTML"
+          >x</button>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-state">Chua co tai lieu nao. Upload mot file de bat dau.</p>
+    {% endif %}
+  </div>
+</aside>

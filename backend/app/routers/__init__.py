@@ -1,1 +1,1 @@
-from app.routers import auth, documents, ai, progress
+from app.routers import ai, auth, documents, progress, web

@@ -1,0 +1,46 @@
+<main class="auth-shell" id="page-shell">
+  <section class="auth-panel">
+    <div class="auth-copy">
+      <p class="eyebrow">HTMX + FastAPI</p>
+      <h1>Workspace hoc tap da noi backend that.</h1>
+      <p>Dang nhap de upload tai lieu, hoi AI, tao quiz va theo doi tien do trong mot giao dien server-rendered.</p>
+    </div>
+
+    <div class="auth-grid">
+      {% if auth_error %}
+        <div class="auth-alert">{{ auth_error }}</div>
+      {% endif %}
+      <form
+        class="auth-card"
+        hx-post="/web/auth/login"
+        hx-target="#page-shell"
+        hx-swap="outerHTML"
+      >
+        <h2>Dang nhap</h2>
+        <label>Email</label>
+        <input name="email" type="email" required>
+        <label>Mat khau</label>
+        <input name="password" type="password" required>
+        <button class="btn btn-send" type="submit">vao workspace</button>
+      </form>
+
+      <form
+        class="auth-card"
+        hx-post="/web/auth/register"
+        hx-target="#page-shell"
+        hx-swap="outerHTML"
+      >
+        <h2>Tao tai khoan</h2>
+        <label>Ho ten</label>
+        <input name="full_name" type="text">
+        <label>Username</label>
+        <input name="username" type="text" required>
+        <label>Email</label>
+        <input name="email" type="email" required>
+        <label>Mat khau</label>
+        <input name="password" type="password" minlength="8" required>
+        <button class="btn btn-upload" type="submit">dang ky nhanh</button>
+      </form>
+    </div>
+  </section>
+</main>
