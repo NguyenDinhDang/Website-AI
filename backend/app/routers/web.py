@@ -131,7 +131,6 @@ async def web_login(
         return templates.TemplateResponse(
             "partials/auth_shell.html",
             {"request": request, "auth_error": exc.detail},
-            status_code=exc.status_code,
         )
     user = await _get_user_from_access_token(tokens.access_token, db)
 
@@ -163,7 +162,6 @@ async def web_register(
         return templates.TemplateResponse(
             "partials/auth_shell.html",
             {"request": request, "auth_error": exc.detail},
-            status_code=exc.status_code,
         )
     user = await _get_user_from_access_token(tokens.access_token, db)
 
@@ -242,7 +240,7 @@ async def web_chat(
         context = await _build_page_context(request, db, user, active_document_id)
         context["tool_title"] = "Thong bao"
         context["tool_body"] = "Hay nhap cau hoi truoc khi gui."
-        return templates.TemplateResponse("partials/workspace.html", context, status_code=400)
+        return templates.TemplateResponse("partials/workspace.html", context)
 
     await chat_service.handle_chat(
         ChatRequest(message=clean_message, document_id=active_document_id),
@@ -264,7 +262,7 @@ async def summarize_document(
     if not active_document_id:
         context["tool_title"] = "Thong bao"
         context["tool_body"] = "Chon mot tai lieu truoc khi tom tat."
-        return templates.TemplateResponse("partials/workspace.html", context, status_code=400)
+        return templates.TemplateResponse("partials/workspace.html", context)
 
     summary = await summarize_service.summarize_document(active_document_id, user.id, db)
     context["tool_title"] = "Tom tat tai lieu"
@@ -283,7 +281,7 @@ async def generate_quiz(
     if not active_document_id:
         context["tool_title"] = "Thong bao"
         context["tool_body"] = "Chon mot tai lieu truoc khi tao quiz."
-        return templates.TemplateResponse("partials/workspace.html", context, status_code=400)
+        return templates.TemplateResponse("partials/workspace.html", context)
 
     await quiz_service.generate_quiz(
         QuizRequest(document_id=active_document_id, num_questions=3),

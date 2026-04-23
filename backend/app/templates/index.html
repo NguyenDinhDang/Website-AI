@@ -8,12 +8,10 @@
   <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-  <div id="page-shell">
-    {% if user %}
-      {% include "partials/app_shell.html" %}
-    {% else %}
-      {% include "partials/auth_shell.html" %}
-    {% endif %}
-  </div>
+  {% if user %}
+    {% include "partials/app_shell.html" %}
+  {% else %}
+    {% include "partials/auth_shell.html" %}
+  {% endif %}
 </body>
 </html>
