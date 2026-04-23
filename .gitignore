@@ -38,3 +38,5 @@ uploads/
 .DS_Store
 *.log
 *.tmp
+.pytest_cache/
+.coverage
