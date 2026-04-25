@@ -3,16 +3,28 @@ File upload utilities: validation, saving, and text extraction
 Supports: pdf, txt, md, docx
 """
 
-import os
 import uuid
 import logging
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from fastapi import UploadFile
 
 from app.core.config import settings
 from app.core.exceptions import BadRequestError
 
 logger = logging.getLogger(__name__)
+
+# Map allowed extension → expected MIME types (magic-bytes based).
+# A file whose content does not match any of these is rejected even if its
+# filename extension looks valid (extension-spoofing defence).
+_ALLOWED_MIMES: dict[str, set[str]] = {
+    "pdf":  {"application/pdf"},
+    "txt":  {"text/plain"},
+    "md":   {"text/plain", "text/markdown", "text/x-markdown"},
+    "docx": {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/zip",  # python-magic sometimes reports OOXML as zip
+    },
+}
 
 
 def _ensure_upload_dir() -> Path:
@@ -21,29 +33,83 @@ def _ensure_upload_dir() -> Path:
     return path
 
 
-def validate_file(file: UploadFile) -> str:
-    """Returns file extension or raises BadRequestError."""
-    ext = (file.filename or "").rsplit(".", 1)[-1].lower()
+def _safe_filename(raw: str) -> str:
+    """Strip path components from an untrusted filename (prevent path traversal)."""
+    return PurePosixPath(raw).name or "upload"
+
+
+def _validate_extension(filename: str) -> str:
+    """Return the lowercase extension or raise BadRequestError."""
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext not in settings.ALLOWED_EXTENSIONS:
-        raise BadRequestError(f"File type '.{ext}' not allowed. Accepted: {settings.ALLOWED_EXTENSIONS}")
+        raise BadRequestError(
+            f"File type '.{ext}' not allowed. "
+            f"Accepted: {sorted(settings.ALLOWED_EXTENSIONS)}"
+        )
     return ext
 
 
-async def save_upload(file: UploadFile) -> tuple[str, int]:
-    """Save file to disk. Returns (file_path, size_bytes)."""
-    ext = validate_file(file)
-    upload_dir = _ensure_upload_dir()
+def _validate_mime(content: bytes, ext: str, filename: str) -> None:
+    """
+    Check the file's actual MIME type against the declared extension.
+    Uses python-magic (libmagic) when available; skips check with a warning
+    if the library is not installed so existing dev environments are not broken.
+    """
+    try:
+        import magic  # python-magic; optional but strongly recommended in prod
+        detected = magic.from_buffer(content[:4096], mime=True)
+        allowed = _ALLOWED_MIMES.get(ext, set())
+        if detected not in allowed:
+            logger.warning(
+                "MIME mismatch for '%s': declared ext=%s, detected=%s",
+                filename, ext, detected,
+            )
+            raise BadRequestError(
+                f"File content does not match its extension "
+                f"(detected '{detected}', expected one of {sorted(allowed)}). "
+                "Upload rejected."
+            )
+    except ImportError:
+        # python-magic not installed — log once so operators notice
+        logger.warning(
+            "python-magic not installed; MIME-type validation is DISABLED. "
+            "Install with: pip install python-magic"
+        )
 
-    unique_name = f"{uuid.uuid4().hex}.{ext}"
-    dest = upload_dir / unique_name
+
+async def save_upload(file: UploadFile) -> tuple[str, int]:
+    """
+    Validate, size-check, MIME-check, then persist the upload to disk.
+    Returns (file_path, size_bytes).
+
+    Size is checked from Content-Length first (fast path) before reading
+    the full body, preventing memory exhaustion from oversized uploads.
+    """
+    safe_name = _safe_filename(file.filename or "upload")
+    ext = _validate_extension(safe_name)
+
+    # Fast-path size check via Content-Length before reading body into RAM.
+    max_bytes = settings.MAX_FILE_SIZE_MB * 1024 * 1024
+    if file.size is not None and file.size > max_bytes:
+        raise BadRequestError(
+            f"File exceeds the {settings.MAX_FILE_SIZE_MB} MB limit "
+            f"({file.size / 1024 / 1024:.1f} MB received)."
+        )
 
     content = await file.read()
     size = len(content)
 
-    max_bytes = settings.MAX_FILE_SIZE_MB * 1024 * 1024
     if size > max_bytes:
-        raise BadRequestError(f"File exceeds {settings.MAX_FILE_SIZE_MB} MB limit")
+        raise BadRequestError(
+            f"File exceeds the {settings.MAX_FILE_SIZE_MB} MB limit "
+            f"({size / 1024 / 1024:.1f} MB received)."
+        )
 
+    # MIME-type validation (magic-bytes, not just extension)
+    _validate_mime(content, ext, safe_name)
+
+    upload_dir = _ensure_upload_dir()
+    dest = upload_dir / f"{uuid.uuid4().hex}.{ext}"
     dest.write_bytes(content)
     logger.info("Saved upload: %s (%d bytes)", dest, size)
     return str(dest), size
