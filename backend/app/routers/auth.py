@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
 from app.dependencies.auth import get_current_user
-from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, UserResponse
+from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, UserResponse, RefreshRequest
 from app.services import auth_service
 from app.models.user import User
 
@@ -31,9 +31,9 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh(body: dict, db: AsyncSession = Depends(get_db)):
+async def refresh(body: RefreshRequest, db: AsyncSession = Depends(get_db)):
     """Exchange a refresh token for new access + refresh tokens."""
-    return await auth_service.refresh_tokens(body.get("refresh_token", ""), db)
+    return await auth_service.refresh_tokens(body.refresh_token, db)
 
 
 @router.get("/me", response_model=UserResponse)
