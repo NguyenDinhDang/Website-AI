@@ -20,6 +20,7 @@ from app.schemas.ai import (
     ChatRequest, ChatResponse,
     ExplainRequest, ExplainResponse,
     GradeRequest, GradeResponse,
+    ChatHistoryResponse, ChatHistoryItem,
 )
 from app.services import (
     summarize_service,
@@ -90,11 +91,15 @@ async def grade(
     return await quiz_service.grade_quiz(req, current_user.id, db)
 
 
-@router.get("/chat/history")
+@router.get("/chat/history", response_model=ChatHistoryResponse)
 async def chat_history(
     document_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve chat history, optionally filtered by document."""
-    return await chat_service.get_chat_history(current_user.id, document_id, db)
+    items = await chat_service.get_chat_history(current_user.id, document_id, db)
+    return ChatHistoryResponse(
+        items=[ChatHistoryItem(**i) for i in items],
+        total=len(items),
+    )
