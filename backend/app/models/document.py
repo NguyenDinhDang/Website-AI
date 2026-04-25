@@ -2,7 +2,7 @@
 
 from sqlalchemy import String, Text, Integer, ForeignKey, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database.session import Base
 
 
@@ -18,7 +18,11 @@ class Document(Base):
     file_size:  Mapped[int]        = mapped_column(Integer, default=0)
     content:    Mapped[str | None] = mapped_column(Text)
     summary:    Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime]   = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime]   = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     owner   = relationship("User",  back_populates="documents")
     chats   = relationship("Chat",  back_populates="document", cascade="all, delete-orphan")
