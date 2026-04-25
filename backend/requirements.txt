@@ -1,4 +1,4 @@
-﻿gitaiosqlite==0.20.0
+﻿aiosqlite==0.20.0
 alembic==1.14.0
 altgraph==0.17.5
 annotated-doc==0.0.4
@@ -19,7 +19,7 @@ dnspython==2.8.0
 ecdsa==0.19.2
 email-validator==2.3.0
 fastapi==0.115.6
-flet==0.24.1
+flet==0.84.0
 flet-core==0.24.1
 flet-desktop==0.84.0
 flet-runtime==0.24.1
