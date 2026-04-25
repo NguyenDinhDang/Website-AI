@@ -24,6 +24,9 @@ async def generate_quiz(req: QuizRequest, user_id: int, db: AsyncSession) -> Qui
         doc = await get_document(req.document_id, user_id, db)
         context = truncate(doc.content or "", max_chars=5000)
 
+    if not context.strip():
+        raise ValueError("No content available to generate quiz from")
+
     raw_questions = await ai_service.generate_quiz(context, req.num_questions)
 
     saved: list[QuizQuestion] = []
@@ -39,11 +42,17 @@ async def generate_quiz(req: QuizRequest, user_id: int, db: AsyncSession) -> Qui
         db.add(quiz)
         saved.append(QuizQuestion(**q))
 
-    # Bump total_quizzes
+    # flush so Quiz rows get their PKs before commit
+    await db.flush()
+
+    # Bump total_quizzes (create row if missing)
     result = await db.execute(select(Progress).where(Progress.user_id == user_id))
     prog = result.scalar_one_or_none()
-    if prog:
-        prog.total_quizzes += len(saved)
+    if prog is None:
+        prog = Progress(user_id=user_id)
+        db.add(prog)
+        await db.flush()
+    prog.total_quizzes += len(saved)
 
     await db.commit()
     return QuizResponse(questions=saved)
@@ -71,14 +80,19 @@ async def grade_quiz(req: GradeRequest, user_id: int, db: AsyncSession) -> Grade
     # Update accuracy in progress
     prog_result = await db.execute(select(Progress).where(Progress.user_id == user_id))
     prog = prog_result.scalar_one_or_none()
-    if prog:
-        if is_correct:
-            prog.correct_answers += 1
-        answered = await db.execute(
-            select(Quiz).where(Quiz.user_id == user_id, Quiz.is_correct.isnot(None))
-        )
-        total_answered = len(answered.scalars().all())
-        prog.accuracy = round((prog.correct_answers / max(total_answered, 1)) * 100, 1)
+    if prog is None:
+        prog = Progress(user_id=user_id)
+        db.add(prog)
+        await db.flush()
+
+    if is_correct:
+        prog.correct_answers += 1
+
+    answered = await db.execute(
+        select(Quiz).where(Quiz.user_id == user_id, Quiz.is_correct.isnot(None))
+    )
+    total_answered = len(answered.scalars().all())
+    prog.accuracy = round((prog.correct_answers / max(total_answered, 1)) * 100, 1)
 
     await db.commit()
     return GradeResponse(
