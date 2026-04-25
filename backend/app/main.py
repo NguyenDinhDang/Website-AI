@@ -31,6 +31,9 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting %s (env=%s)", settings.APP_NAME, settings.ENV)
+    # Ensure upload directory exists before accepting requests
+    Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+    logger.info("Upload directory ready: %s", Path(settings.UPLOAD_DIR).resolve())
     await init_db()
     yield
     logger.info("Shutdown complete.")
@@ -55,11 +58,11 @@ app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
+app.include_router(auth.router,      prefix="/api/v1/auth",      tags=["Auth"])
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
-app.include_router(ai.router, prefix="/api/v1/ai", tags=["AI"])
-app.include_router(progress.router, prefix="/api/v1/progress", tags=["Progress"])
-app.include_router(web.router, tags=["Web"])
+app.include_router(ai.router,        prefix="/api/v1/ai",        tags=["AI"])
+app.include_router(progress.router,  prefix="/api/v1/progress",  tags=["Progress"])
+app.include_router(web.router,       tags=["Web"])
 
 app.mount("/assets", StaticFiles(directory=BASE_DIR / "public"), name="assets")
 
