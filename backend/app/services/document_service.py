@@ -5,7 +5,7 @@ Document Service — upload, list, retrieve, delete
 import logging
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 from app.models.document import Document
 from app.models.progress import Progress
@@ -36,7 +36,6 @@ async def upload_document(
     )
     db.add(doc)
 
-    # Increment user progress counter
     await _bump_progress(user_id, "total_documents", db)
 
     await db.commit()
@@ -78,7 +77,11 @@ async def delete_document(doc_id: int, user_id: int, db: AsyncSession) -> None:
 # ── Internal ──────────────────────────────────────────────────────────────────
 
 async def _bump_progress(user_id: int, field: str, db: AsyncSession) -> None:
+    """Increment a progress counter, creating the row if it doesn't exist."""
     result = await db.execute(select(Progress).where(Progress.user_id == user_id))
     prog = result.scalar_one_or_none()
-    if prog:
-        setattr(prog, field, getattr(prog, field) + 1)
+    if prog is None:
+        prog = Progress(user_id=user_id)
+        db.add(prog)
+        await db.flush()
+    setattr(prog, field, getattr(prog, field) + 1)
