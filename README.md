@@ -241,6 +241,7 @@ docker-compose up --build
 
 ```bash
 # 1. Moi truong
+cd backend
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
@@ -252,17 +253,30 @@ cp .env.example .env
 createdb ai_learning
 alembic upgrade head
 
-# 4. Chay backend
+# 4. Chay backend (port 8000)
 python run.py
 # hoac: uvicorn app.main:app --reload --port 8000
+```
 
-# 5. Mo frontend
-cd public
-python -m http.server 5500
-# Truy cap http://localhost:5500
+**Truy cap frontend:**
+
+Backend mount thu muc `public/` tai `/assets`, nhung de mo truc tiep
+`public/index.html` tren trinh duyet ban co 2 cach:
+
+```bash
+# Cach A — mo file truc tiep (khong can server)
+# Mo public/index.html bang trinh duyet (file://)
+# CORS da duoc cau hinh cho origin "null"
+
+# Cach B — Live Server (VS Code, khuyen dung khi dev)
+# Cai extension "Live Server", click "Go Live" tren index.html
+# Frontend se chay tai http://127.0.0.1:5500
 ```
 
 API docs tu dong co tai: http://localhost:8000/docs
+
+> **Luu y**: `API_BASE` trong `public/app.js` mac dinh la `http://localhost:8000/api/v1`.
+> Thay doi gia tri nay neu backend chay tren host/port khac.
 
 ---
 

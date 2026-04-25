@@ -752,3 +752,200 @@ html, body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ================================================================
+   AUTH OVERLAY
+================================================================ */
+.auth-overlay {
+  position: fixed; inset: 0;
+  background: #0d0d11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.auth-card {
+  background: #13131a;
+  border: 1px solid #2a2a3a;
+  border-radius: 12px;
+  padding: 36px 40px 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.5);
+}
+
+.auth-logo {
+  font-family: Consolas, monospace;
+  font-size: 22px;
+  color: #00d4aa;
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: #555;
+  font-size: 12px;
+  margin: 0 0 24px;
+  letter-spacing: 1px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #2a2a3a;
+}
+
+.auth-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #555;
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: color .2s, border-color .2s;
+  margin-bottom: -1px;
+}
+
+.auth-tab.active {
+  color: #00d4aa;
+  border-bottom-color: #00d4aa;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-input {
+  background: #0d0d11;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  color: #ccc;
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.auth-input:focus { border-color: #00d4aa; }
+
+.btn-auth {
+  background: #00d4aa;
+  color: #0d0d11;
+  border: none;
+  border-radius: 6px;
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px;
+  cursor: pointer;
+  transition: opacity .2s;
+  margin-top: 4px;
+}
+
+.btn-auth:hover   { opacity: .85; }
+.btn-auth:disabled { opacity: .4; cursor: not-allowed; }
+
+.auth-error {
+  color: #ff5c72;
+  font-size: 12px;
+  min-height: 16px;
+  margin: 0;
+  font-family: Consolas, monospace;
+}
+
+/* topbar user badge */
+.topbar-user {
+  margin-left: auto;
+  font-size: 11px;
+  color: #00d4aa;
+  font-family: Consolas, monospace;
+}
+
+/* ================================================================
+   ACTIVE DOCUMENT + QUIZ STYLES + THINKING DOTS
+================================================================ */
+
+/* Active document in sidebar */
+.file-item.active {
+  border-color: #00d4aa;
+  background: rgba(0, 212, 170, 0.06);
+}
+
+.file-item.active .file-name {
+  color: #00d4aa;
+}
+
+/* Quiz options */
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #aaa;
+  transition: background .15s;
+}
+
+.quiz-option:hover { background: rgba(255,255,255,.04); }
+
+.quiz-option input[type="radio"] {
+  margin-top: 2px;
+  accent-color: #00d4aa;
+}
+
+.quiz-q-text {
+  font-size: 13px;
+  color: #ccc;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+/* Thinking dots animation */
+.dots span {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #00d4aa;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: blink 1.2s infinite;
+}
+
+.dots span:nth-child(2) { animation-delay: .2s; }
+.dots span:nth-child(3) { animation-delay: .4s; }
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0; }
+  40%            { opacity: 1; }
+}
+
+/* Drop-zone hover state */
+.drop-zone.drag-over {
+  border-color: #00d4aa;
+  background: rgba(0, 212, 170, 0.04);
+  color: #00d4aa;
+}
+
+/* Status busy color */
+.topbar-status.busy {
+  color: #e8c547;
+}

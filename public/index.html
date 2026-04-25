@@ -9,112 +9,99 @@
 <body>
 
   <!-- =============================================
+       AUTH MODAL (login / register)
+  ============================================= -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <div class="auth-logo">◈ LearnOS</div>
+      <p class="auth-subtitle">AI Learning Workspace</p>
+
+      <!-- Tab switcher -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin"    onclick="switchAuthTab('login')">Đăng nhập</button>
+        <button class="auth-tab"        id="tabRegister" onclick="switchAuthTab('register')">Đăng ký</button>
+      </div>
+
+      <!-- Login form -->
+      <div class="auth-form" id="formLogin">
+        <input class="auth-input" id="loginEmail"    type="email"    placeholder="Email" autocomplete="email" />
+        <input class="auth-input" id="loginPassword" type="password" placeholder="Mật khẩu" autocomplete="current-password" />
+        <button class="btn btn-auth" id="btnLogin" onclick="doLogin()">Đăng nhập</button>
+        <p class="auth-error" id="loginError"></p>
+      </div>
+
+      <!-- Register form -->
+      <div class="auth-form" id="formRegister" style="display:none">
+        <input class="auth-input" id="regEmail"    type="email"    placeholder="Email" autocomplete="email" />
+        <input class="auth-input" id="regUsername" type="text"     placeholder="Username (a–z, 0–9, _)" autocomplete="username" />
+        <input class="auth-input" id="regFullName" type="text"     placeholder="Họ và tên (tuỳ chọn)" />
+        <input class="auth-input" id="regPassword" type="password" placeholder="Mật khẩu (≥ 8 ký tự)" autocomplete="new-password" />
+        <button class="btn btn-auth" id="btnRegister" onclick="doRegister()">Tạo tài khoản</button>
+        <p class="auth-error" id="registerError"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================
        APP SHELL
   ============================================= -->
-  <div class="app-shell">
+  <div class="app-shell" id="appShell" style="display:none">
 
     <!-- TOP BAR -->
     <header class="topbar">
       <span class="topbar-logo">◈ LearnOS</span>
       <span class="topbar-subtitle">AI Learning Workspace</span>
       <span class="topbar-status" id="statusIndicator">● idle</span>
+      <span class="topbar-user" id="topbarUser"></span>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">[ logout ]</button>
     </header>
 
     <!-- 3-COLUMN LAYOUT -->
     <div class="workspace">
 
-      <!-- ==========================================
-           LEFT SIDEBAR — Nguồn tài liệu
-      =========================================== -->
+      <!-- LEFT SIDEBAR -->
       <aside class="sidebar">
-
         <div class="panel-header">
           <span class="panel-title">Nguồn tài liệu</span>
           <span class="doc-count badge" id="docCount">0</span>
         </div>
-
-        <!-- Upload controls -->
         <div class="upload-zone">
-          <input
-            type="file"
-            id="fileInput"
-            multiple
-            accept=".pdf,.txt,.docx,.md"
-            style="display:none"
-          />
-          <button class="btn btn-upload" onclick="triggerFileInput()">
-            + Thêm tài liệu
-          </button>
+          <input type="file" id="fileInput" multiple accept=".pdf,.txt,.docx,.md" style="display:none" />
+          <button class="btn btn-upload" onclick="triggerFileInput()">+ Thêm tài liệu</button>
           <p class="upload-hint">PDF · TXT · DOCX · MD</p>
         </div>
-
-        <!-- Drag-drop zone -->
-        <div class="drop-zone" id="dropZone">
-          <span>Kéo thả file vào đây</span>
-        </div>
-
-        <!-- File list -->
+        <div class="drop-zone" id="dropZone"><span>Kéo thả file vào đây</span></div>
         <div class="file-list" id="fileList">
           <p class="empty-state" id="emptyDocs">Chưa có tài liệu nào.</p>
         </div>
-
       </aside>
 
-      <!-- ==========================================
-           MAIN — Chat
-      =========================================== -->
+      <!-- MAIN CHAT -->
       <main class="main-panel">
-
         <div class="panel-header">
           <span class="panel-title">AI Learning Assistant</span>
           <button class="btn btn-ghost btn-sm" onclick="clearChat()">[ xoá chat ]</button>
         </div>
-
-        <!-- Chat messages -->
         <div class="chat-window" id="chatWindow">
           <div class="msg msg-ai">
             <span class="msg-icon">◈</span>
-            <div class="msg-body">
-              Xin chào! Upload tài liệu bên trái và đặt câu hỏi để bắt đầu.
-            </div>
+            <div class="msg-body">Xin chào! Upload tài liệu bên trái và đặt câu hỏi để bắt đầu.</div>
           </div>
         </div>
-
-        <!-- Input bar -->
         <div class="chat-input-bar">
-          <textarea
-            id="chatInput"
-            class="chat-textarea"
-            placeholder="Nhập câu hỏi... (Enter để gửi, Shift+Enter xuống dòng)"
-            rows="1"
-          ></textarea>
+          <textarea id="chatInput" class="chat-textarea" placeholder="Nhập câu hỏi... (Enter để gửi, Shift+Enter xuống dòng)" rows="1"></textarea>
           <button class="btn btn-send" id="btnAsk" onclick="sendMessage()">Hỏi AI</button>
         </div>
-
       </main>
 
-      <!-- ==========================================
-           RIGHT PANEL — Công cụ
-      =========================================== -->
+      <!-- RIGHT PANEL -->
       <aside class="right-panel">
-
-        <div class="panel-header">
-          <span class="panel-title">Công cụ</span>
-        </div>
-
+        <div class="panel-header"><span class="panel-title">Công cụ</span></div>
         <div class="tool-list">
-          <button class="btn btn-tool" onclick="runTool('quiz')">
-            <span class="tool-icon">⚡</span> Tạo bài tập
-          </button>
-          <button class="btn btn-tool" onclick="runTool('summary')">
-            <span class="tool-icon">◎</span> Tóm tắt tài liệu
-          </button>
-          <button class="btn btn-tool" onclick="runTool('notes')">
-            <span class="tool-icon">✎</span> Tạo ghi chú
-          </button>
+          <button class="btn btn-tool" onclick="runTool('quiz')"><span class="tool-icon">⚡</span> Tạo bài tập</button>
+          <button class="btn btn-tool" onclick="runTool('summary')"><span class="tool-icon">◎</span> Tóm tắt tài liệu</button>
+          <button class="btn btn-tool" onclick="runTool('notes')"><span class="tool-icon">✎</span> Tạo ghi chú</button>
         </div>
-
-        <!-- Tool output box -->
         <div class="tool-output" id="toolOutput" style="display:none">
           <div class="tool-output-header">
             <span id="toolOutputTitle">—</span>
@@ -122,24 +109,12 @@
           </div>
           <div class="tool-output-body" id="toolOutputBody"></div>
         </div>
-
-        <!-- Session stats -->
         <div class="stats-block">
           <p class="stats-title">// phiên làm việc</p>
-          <div class="stat-row">
-            <span class="stat-label">tài liệu</span>
-            <span class="stat-val" id="statDocs">0</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">câu hỏi</span>
-            <span class="stat-val" id="statQuestions">0</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">thời gian</span>
-            <span class="stat-val" id="statTime">00:00</span>
-          </div>
+          <div class="stat-row"><span class="stat-label">tài liệu</span><span class="stat-val" id="statDocs">0</span></div>
+          <div class="stat-row"><span class="stat-label">câu hỏi</span><span class="stat-val" id="statQuestions">0</span></div>
+          <div class="stat-row"><span class="stat-label">thời gian</span><span class="stat-val" id="statTime">00:00</span></div>
         </div>
-
       </aside>
 
     </div><!-- /workspace -->

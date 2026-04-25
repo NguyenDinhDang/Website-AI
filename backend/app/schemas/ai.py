@@ -58,3 +58,14 @@ class GradeResponse(BaseModel):
     is_correct:  bool
     explanation: str
     correct_index: int
+
+
+class ChatHistoryItem(BaseModel):
+    role:       str
+    content:    str
+    created_at: str | None = None  # ISO string from chat_service
+
+
+class ChatHistoryResponse(BaseModel):
+    items: list[ChatHistoryItem]
+    total: int
