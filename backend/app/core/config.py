@@ -5,7 +5,6 @@ Central configuration — reads from .env via pydantic-settings
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 from typing import List
-import secrets
 
 
 class Settings(BaseSettings):
@@ -22,7 +21,10 @@ class Settings(BaseSettings):
         "null",  # file:// protocol for local HTML dev
     ]
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/ai_learning"
-    JWT_SECRET_KEY: str = secrets.token_hex(32)
+    # REQUIRED — must be set explicitly in .env. No default so the app fails
+    # fast on startup rather than silently signing tokens with a throwaway key.
+    # Generate: python -c "import secrets; print(secrets.token_hex(32))"
+    JWT_SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -34,6 +36,16 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     MAX_FILE_SIZE_MB: int = 20
     ALLOWED_EXTENSIONS: List[str] = ["pdf", "txt", "md", "docx"]
+
+    @field_validator("JWT_SECRET_KEY")
+    @classmethod
+    def _require_strong_jwt_secret(cls, v: str) -> str:
+        if len(v) < 32:
+            raise ValueError(
+                "JWT_SECRET_KEY must be at least 32 characters. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
+        return v
 
     @field_validator("CORS_ALLOWED_ORIGINS", mode="before")
     @classmethod
