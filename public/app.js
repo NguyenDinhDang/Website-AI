@@ -16,7 +16,7 @@
 // ================================================================
 // 1. CONFIG & STATE
 // ================================================================
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = 'http://192.168.1.35:8000/api/v1';
 
 const state = {
   files:         [],   // { id, name, ext, size, backendId }

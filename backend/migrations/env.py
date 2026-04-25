@@ -1,14 +1,14 @@
-"""Alembic environment — async SQLAlchemy setup"""
+"""Alembic environment - supports SQLite and PostgreSQL"""
 
 import asyncio
 from logging.config import fileConfig
-from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy import pool, text
+from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
 
 from app.core.config import settings
 from app.database.session import Base
-from app.models import user, document, chat, quiz, progress  # noqa: F401 — register models
+from app.models import user, document, chat, quiz, progress  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
@@ -17,30 +17,43 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+IS_SQLITE = settings.DATABASE_URL.startswith("sqlite")
 
 
-def run_migrations_offline() -> None:
+def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")
-    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        render_as_batch=IS_SQLITE,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        render_as_batch=IS_SQLITE,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
 
-async def run_migrations_online() -> None:
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+async def run_migrations_online():
+    extra = {"connect_args": {"check_same_thread": False}} if IS_SQLITE else {}
+    engine = create_async_engine(
+        settings.DATABASE_URL,
         poolclass=pool.NullPool,
+        **extra,
     )
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-    await connectable.dispose()
+    async with engine.connect() as conn:
+        if IS_SQLITE:
+            await conn.execute(text("PRAGMA journal_mode=WAL"))
+        await conn.run_sync(do_run_migrations)
+    await engine.dispose()
 
 
 if context.is_offline_mode():
