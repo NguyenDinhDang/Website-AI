@@ -9,15 +9,17 @@ from app.database.session import Base
 class Document(Base):
     __tablename__ = "documents"
 
-    id:           Mapped[int]           = mapped_column(primary_key=True, index=True)
-    owner_id:     Mapped[int]           = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
-    title:        Mapped[str]           = mapped_column(String(255), nullable=False)
-    filename:     Mapped[str]           = mapped_column(String(255), nullable=False)
-    file_path:    Mapped[str]           = mapped_column(String(512), nullable=False)
-    file_type:    Mapped[str]           = mapped_column(String(10), nullable=False)  # pdf, txt, md
-    file_size:    Mapped[int]           = mapped_column(Integer, default=0)          # bytes
-    content:      Mapped[str | None]    = mapped_column(Text)                        # extracted text
-    summary:      Mapped[str | None]    = mapped_column(Text)                        # AI summary cache
-    created_at:   Mapped[datetime]      = mapped_column(DateTime(timezone=True), server_default=func.now())
+    id:         Mapped[int]        = mapped_column(primary_key=True, index=True)
+    owner_id:   Mapped[int]        = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    title:      Mapped[str]        = mapped_column(String(255), nullable=False)
+    filename:   Mapped[str]        = mapped_column(String(255), nullable=False)
+    file_path:  Mapped[str]        = mapped_column(String(512), nullable=False)
+    file_type:  Mapped[str]        = mapped_column(String(10),  nullable=False)
+    file_size:  Mapped[int]        = mapped_column(Integer, default=0)
+    content:    Mapped[str | None] = mapped_column(Text)
+    summary:    Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime]   = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    owner = relationship("User", back_populates="documents")
+    owner   = relationship("User",  back_populates="documents")
+    chats   = relationship("Chat",  back_populates="document", cascade="all, delete-orphan")
+    quizzes = relationship("Quiz",  back_populates="document", cascade="all, delete-orphan")
