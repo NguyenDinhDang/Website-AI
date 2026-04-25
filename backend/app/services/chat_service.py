@@ -28,11 +28,14 @@ async def handle_chat(req: ChatRequest, user_id: int, db: AsyncSession) -> ChatR
     db.add(Chat(user_id=user_id, document_id=req.document_id, role="user",      content=req.message))
     db.add(Chat(user_id=user_id, document_id=req.document_id, role="assistant", content=answer))
 
-    # Bump progress
+    # Bump progress (create row if missing)
     result = await db.execute(select(Progress).where(Progress.user_id == user_id))
     prog = result.scalar_one_or_none()
-    if prog:
-        prog.total_chats += 1
+    if prog is None:
+        prog = Progress(user_id=user_id)
+        db.add(prog)
+        await db.flush()
+    prog.total_chats += 1
 
     await db.commit()
     return ChatResponse(answer=answer, document_id=req.document_id)
@@ -43,4 +46,12 @@ async def get_chat_history(user_id: int, document_id: int | None, db: AsyncSessi
     if document_id:
         q = q.where(Chat.document_id == document_id)
     result = await db.execute(q)
-    return [{"role": c.role, "content": c.content, "created_at": c.created_at} for c in result.scalars()]
+    return [
+        {
+            "role": c.role,
+            "content": c.content,
+            # Serialize datetime to ISO string so it's JSON-safe
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+        }
+        for c in result.scalars()
+    ]
