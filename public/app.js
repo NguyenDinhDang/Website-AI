@@ -16,7 +16,13 @@
 // ================================================================
 // 1. CONFIG & STATE
 // ================================================================
-const API_BASE = 'http://192.168.1.35:8000/api/v1';
+// Resolve API base at runtime — works on any host after deployment.
+// Default: relative /api/v1 (same-origin, works behind any reverse proxy).
+// Override per-env: <meta name="api-base" content="https://api.prod.example.com/api/v1">
+const API_BASE = (() => {
+  const meta = document.querySelector('meta[name="api-base"]');
+  return meta ? meta.getAttribute('content').replace(/\/$/, '') : '/api/v1';
+})();
 
 const state = {
   files:         [],   // { id, name, ext, size, backendId }
@@ -445,8 +451,15 @@ async function runTool(key) {
   }
 }
 
+// Module-level store — quiz data lives in JS memory, never embedded in the DOM.
+// This is the single source of truth that checkAnswer() reads from.
+let _activeQuiz = [];
+
 function renderQuiz(questions) {
   if (!questions || questions.length === 0) return 'Không tạo được câu hỏi.';
+
+  // Store reference in JS — no data-attributes, no inline event parameters.
+  _activeQuiz = questions;
 
   return questions.map((q, qi) => {
     const opts = q.options.map((opt, oi) => `
@@ -456,24 +469,33 @@ function renderQuiz(questions) {
       </label>
     `).join('');
 
-    // Store quiz data as data attributes for grade API
-    const qData = escapeHTML(JSON.stringify(q));
+    // data-qi carries only the numeric index — no untrusted content in DOM.
     return `
-      <div class="quiz-question" data-qi="${qi}" data-q='${qData}'>
+      <div class="quiz-question" data-qi="${qi}">
         <p class="quiz-q-text">${qi + 1}. ${escapeHTML(q.question)}</p>
         <div class="quiz-options">${opts}</div>
         <p class="quiz-explanation" id="exp-${qi}" style="display:none;font-size:12px;margin-top:6px"></p>
-        <button class="btn btn-ghost btn-sm" onclick="checkAnswer(${qi}, ${q.correct_index}, ${JSON.stringify(escapeHTML(q.explanation || ''))})">
-          Kiểm tra
-        </button>
+        <button class="btn btn-ghost btn-sm" data-check="${qi}">Kiểm tra</button>
       </div>
     `;
   }).join('<hr style="border-color:#2a2a3a;margin:12px 0">');
 }
 
-function checkAnswer(qi, correctIndex, explanation) {
+// Single delegated listener on the tool output container —
+// no inline onclick, no user-controlled data in event handler arguments.
+document.getElementById('toolOutputBody').addEventListener('click', function (e) {
+  const btn = e.target.closest('button[data-check]');
+  if (!btn) return;
+  checkAnswer(parseInt(btn.dataset.check, 10));
+});
+
+function checkAnswer(qi) {
+  const q       = _activeQuiz[qi];
   const selected = document.querySelector(`input[name="q${qi}"]:checked`);
   const expEl    = document.getElementById(`exp-${qi}`);
+
+  if (!q || !expEl) return;
+
   if (!selected) {
     expEl.style.display = 'block';
     expEl.style.color   = '#e8c547';
@@ -481,10 +503,11 @@ function checkAnswer(qi, correctIndex, explanation) {
     return;
   }
 
-  const isCorrect = parseInt(selected.value) === correctIndex;
+  const isCorrect = parseInt(selected.value, 10) === q.correct_index;
   expEl.style.display = 'block';
   expEl.style.color   = isCorrect ? '#00d4aa' : '#ff5c72';
-  expEl.textContent   = (isCorrect ? '✓ Đúng! ' : '✗ Sai. ') + explanation;
+  // textContent — never innerHTML — so AI-supplied explanation cannot inject markup.
+  expEl.textContent   = (isCorrect ? '✓ Đúng! ' : '✗ Sai. ') + (q.explanation || '');
 }
 
 function closeToolOutput() {
