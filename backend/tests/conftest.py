@@ -81,3 +81,12 @@ async def auth_headers(client: AsyncClient):
     })
     token = resp.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def reset_ai_client():
+    """Reset the OpenAI singleton between tests to prevent cross-test contamination."""
+    import app.services.ai_service as _ai
+    _ai._client = None
+    yield
+    _ai._client = None

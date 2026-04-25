@@ -12,7 +12,7 @@ class DocumentResponse(BaseModel):
     file_type:  str
     file_size:  int
     summary:    Optional[str] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 

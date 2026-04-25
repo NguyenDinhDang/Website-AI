@@ -23,7 +23,7 @@ class QuizQuestion(BaseModel):
     question:      str
     options:       list[str]
     correct_index: int
-    explanation:   str
+    explanation:   str = ""  # AI may omit this field
 
 
 class QuizResponse(BaseModel):
