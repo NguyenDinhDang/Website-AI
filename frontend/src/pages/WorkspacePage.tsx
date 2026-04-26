@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import '../styles/WorkspacePage.css'
 
 interface UserResponse {
   id: number
@@ -37,7 +38,7 @@ async function apiFetch(path: string, options: RequestInit = {}) {
   })
   if (response.status === 204) return null
   const data = await response.json()
-  if (!response.ok) throw new Error(data.detail || 'Lỗi server')
+  if (!response.ok) throw new Error(data.detail || 'Lỗi từ server')
   return data
 }
 
@@ -53,13 +54,17 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [toolContent, setToolContent] = useState('')
   const [isToolLoading, setIsToolLoading] = useState(false)
   const [progress, setProgress] = useState({ total_documents: 0, total_chats: 0, total_quizzes: 0, accuracy: 0 })
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
+    // Media query to default sidebar to open on desktop
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+    if (isDesktop) setSidebarOpen(true);
+    
     loadInitialData()
   }, [])
 
@@ -83,6 +88,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       }
     } catch (err) {
       console.error('Failed to load initial data', err)
+      // Throw to error boundary if needed, but for now just console error
     }
   }
 
@@ -101,6 +107,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     setActiveDocId(docId)
     setActiveToolPanel(null)
     setToolContent('')
+    if (window.innerWidth < 768) setSidebarOpen(false); // auto close on mobile
     await loadChatHistory(docId)
   }
 
@@ -210,175 +217,163 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const activeDoc = documents.find(d => d.id === activeDocId)
 
   return (
-    <div style={ws.shell}>
-      <style>{workspaceCss}</style>
-
+    <div className="workspace-layout">
       {/* Top bar */}
-      <header style={ws.topbar}>
-        <div style={ws.topbarLeft}>
-          <button onClick={() => setSidebarOpen(s => !s)} style={ws.iconBtn} className="icon-btn" title="Toggle sidebar">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <rect y="2" width="16" height="1.5" rx="0.75" fill="currentColor"/>
-              <rect y="7.25" width="16" height="1.5" rx="0.75" fill="currentColor"/>
-              <rect y="12.5" width="16" height="1.5" rx="0.75" fill="currentColor"/>
+      <header className="topbar">
+        <div className="topbar-left">
+          <button onClick={() => setSidebarOpen(s => !s)} className="btn btn-icon" title="Toggle sidebar" aria-label="Toggle sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
-          <div style={ws.topbarBrand}>
-            <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="8" fill="#1a56db"/>
+
+          <div className="brand-container">
+            <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+              <rect width="28" height="28" rx="8" fill="var(--primary)"/>
               <path d="M8 20L14 8L20 20M10.5 15.5H17.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
-            <span style={ws.brandLabel}>LearnOS</span>
+            <span className="brand-label">LearnOS</span>
           </div>
+
           {activeDoc && (
-            <div style={ws.breadcrumb}>
-              <span style={ws.breadcrumbSep}>/</span>
-              <span style={ws.breadcrumbItem}>{activeDoc.title}</span>
+            <div className="breadcrumb">
+              <span className="breadcrumb-item" title={activeDoc.title}>{activeDoc.title}</span>
             </div>
           )}
         </div>
 
-        <div style={ws.topbarRight}>
-          <div style={ws.userBadge}>
-            <div style={ws.avatar}>{currentUser?.username?.[0]?.toUpperCase() ?? 'U'}</div>
-            <span style={ws.username}>{currentUser?.username ?? '...'}</span>
+        <div className="topbar-right">
+          <div className="user-badge">
+            <div className="avatar">{currentUser?.username?.[0]?.toUpperCase() ?? 'U'}</div>
+            <span className="username">{currentUser?.username ?? '...'}</span>
           </div>
-          <button onClick={onLogout} style={ws.logoutBtn} className="logout-btn">
+          <button onClick={onLogout} className="btn btn-secondary" style={{ padding: 'var(--space-1) var(--space-3)' }}>
             Đăng xuất
           </button>
         </div>
       </header>
 
-      {/* Main workspace */}
-      <div style={ws.workspace}>
+      {/* Main workspace layer */}
+      <div className="workspace-body">
+        
+        {/* Sidebar Panel */}
+        <aside className={`sidebar ${sidebarOpen ? '' : 'hidden'}`}>
+          <div className="sidebar-header">
+            <span className="sidebar-title">Tài liệu của bạn</span>
+            <span className="badge badge-blue">{documents.length}</span>
+          </div>
 
-        {/* Sidebar */}
-        {sidebarOpen && (
-          <aside style={ws.sidebar}>
-            <div style={ws.sidebarHeader}>
-              <span style={ws.sidebarTitle}>Tài liệu</span>
-              <span style={ws.docBadge}>{documents.length}</span>
-            </div>
-
-            {/* Upload */}
-            <div style={ws.uploadZone}>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.txt,.md,.docx"
-                onChange={handleUpload}
-                style={{ display: 'none' }}
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                style={ws.uploadBtn}
-                className="upload-btn"
-              >
-                {isUploading ? (
-                  <><span className="spinner-dark" /> Đang tải lên…</>
-                ) : (
-                  <><span style={ws.plusIcon}>+</span> Thêm tài liệu</>
-                )}
-              </button>
-              <p style={ws.uploadHint}>PDF · TXT · DOCX · MD</p>
-            </div>
-
-            {/* Document list */}
-            <div style={ws.docList}>
-              {documents.length === 0 ? (
-                <div style={ws.emptyState}>
-                  <p style={ws.emptyText}>Chưa có tài liệu nào.</p>
-                  <p style={ws.emptyHint}>Upload file để bắt đầu.</p>
-                </div>
+          <div className="upload-zone">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.txt,.md,.docx"
+              onChange={handleUpload}
+              style={{ display: 'none' }}
+              aria-label="Upload document"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="btn btn-secondary"
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {isUploading ? (
+                <><span className="spinner" style={{ color: 'var(--text-muted)' }} /> Đang xử lý…</>
               ) : (
-                documents.map(doc => (
-                  <div
-                    key={doc.id}
-                    onClick={() => handleSelectDoc(doc.id)}
-                    style={{
-                      ...ws.docItem,
-                      ...(doc.id === activeDocId ? ws.docItemActive : {}),
-                    }}
-                    className={`doc-item ${doc.id === activeDocId ? 'active' : ''}`}
-                  >
-                    <span style={{
-                      ...ws.docTypeBadge,
-                      ...(doc.id === activeDocId ? ws.docTypeBadgeActive : {}),
-                    }}>
-                      {doc.file_type.toUpperCase()}
-                    </span>
-                    <span style={ws.docName}>{doc.title.length > 22 ? doc.title.slice(0, 22) + '…' : doc.title}</span>
-                    <button
-                      onClick={(e) => handleDeleteDoc(doc.id, e)}
-                      style={ws.deleteBtn}
-                      className="delete-btn"
-                      title="Xoá"
-                    >✕</button>
-                  </div>
-                ))
+                <>+ Thêm tài liệu mới</>
               )}
-            </div>
+            </button>
+            <p className="upload-hint">PDF, TXT, DOCX, MD</p>
+          </div>
 
-            {/* Stats */}
-            <div style={ws.statsBlock}>
-              <p style={ws.statsTitle}>Thống kê</p>
-              {[
-                { label: 'Tài liệu', value: progress.total_documents },
-                { label: 'Lượt chat', value: progress.total_chats },
-                { label: 'Quiz', value: progress.total_quizzes },
-                { label: 'Độ chính xác', value: `${progress.accuracy}%` },
-              ].map(stat => (
-                <div key={stat.label} style={ws.statRow}>
-                  <span style={ws.statLabel}>{stat.label}</span>
-                  <span style={ws.statValue}>{stat.value}</span>
+          <div className="doc-list">
+            {documents.length === 0 ? (
+              <div className="empty-state">
+                <p className="empty-text">Chưa có tài liệu nào.</p>
+                <p className="upload-hint">Upload file để bắt đầu.</p>
+              </div>
+            ) : (
+              documents.map(doc => (
+                <div
+                  key={doc.id}
+                  onClick={() => handleSelectDoc(doc.id)}
+                  className={`doc-item ${doc.id === activeDocId ? 'active' : ''}`}
+                >
+                  <span className={`badge ${doc.id === activeDocId ? 'badge-blue' : 'badge-gray'}`}>
+                    {doc.file_type.toUpperCase()}
+                  </span>
+                  <span className="doc-name">{doc.title}</span>
+                  <button
+                    onClick={(e) => handleDeleteDoc(doc.id, e)}
+                    className="delete-btn"
+                    title="Xoá tài liệu"
+                    aria-label="Delete document"
+                  >
+                    ✕
+                  </button>
                 </div>
-              ))}
-            </div>
-          </aside>
-        )}
+              ))
+            )}
+          </div>
 
-        {/* Chat panel */}
-        <main style={ws.chatPanel}>
-          <div style={ws.chatHeader}>
+          <div className="stats-block">
+            <div className="sidebar-title" style={{ marginBottom: 'var(--space-2)' }}>Thống kê học tập</div>
+            {[
+              { label: 'Tài liệu', value: progress.total_documents },
+              { label: 'Lượt chat', value: progress.total_chats },
+              { label: 'Bài quiz', value: progress.total_quizzes },
+              { label: 'Độ chính xác', value: `${progress.accuracy}%` },
+            ].map(stat => (
+              <div key={stat.label} className="stat-row">
+                <span className="stat-label">{stat.label}</span>
+                <span className="stat-value">{stat.value}</span>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        {/* Central Chat Panel */}
+        <main className="chat-main">
+          <div className="chat-header">
             <div>
-              <p style={ws.chatTitle}>AI Assistant</p>
-              <p style={ws.chatContext}>
-                {activeDoc ? `Đang hỏi theo: ${activeDoc.title}` : 'Không có tài liệu được chọn'}
+              <p className="chat-title">Trợ lý AI</p>
+              <p className="chat-context">
+                {activeDoc ? `Đang tư vấn dựa trên: ${activeDoc.title}` : 'Vui lòng chọn tài liệu để bắt đầu'}
               </p>
             </div>
             {isAiLoading && (
-              <div style={ws.thinkingBadge}>
-                <span className="spinner-blue" />
-                <span style={ws.thinkingText}>Đang suy nghĩ…</span>
+              <div className="badge badge-blue" style={{ fontSize: '11px', padding: 'var(--space-1) var(--space-3)', borderRadius: 'var(--radius-full)' }}>
+                <span className="spinner" style={{ width: 10, height: 10, marginRight: 6 }} /> Đang phân tích...
               </div>
             )}
           </div>
 
-          {/* Messages */}
-          <div style={ws.chatWindow}>
+          <div className="chat-window">
             {chatMessages.length === 0 && (
-              <div style={ws.welcomeCard}>
-                <div style={ws.welcomeIcon}>◈</div>
-                <p style={ws.welcomeTitle}>Bắt đầu cuộc trò chuyện</p>
-                <p style={ws.welcomeText}>
+              <div className="card welcome-card">
+                <div className="welcome-icon">◈</div>
+                <h3 className="welcome-title">Xin chào, {currentUser?.full_name || currentUser?.username}</h3>
+                <p className="welcome-text">
                   {activeDoc
-                    ? `Đặt câu hỏi về "${activeDoc.title}" để AI hỗ trợ bạn học tập.`
-                    : 'Chọn hoặc upload tài liệu bên trái, sau đó đặt câu hỏi.'}
+                    ? `Bạn có thể đặt bất kỳ câu hỏi nào liên quan đến nội dung tài liệu "${activeDoc.title}". Tôi sẽ tìm kiếm và trả lời.`
+                    : 'Tải lên một tài liệu ở cột bên trái và chọn nó để bắt đầu trải nghiệm học tập cùng AI.'}
                 </p>
               </div>
             )}
 
             {chatMessages.map((msg, idx) => (
-              <div key={idx} style={msg.role === 'user' ? ws.msgRowUser : ws.msgRowAi}>
+              <div key={idx} className={`msg-row ${msg.role}`}>
                 {msg.role === 'assistant' && (
-                  <div style={ws.aiBubbleIcon}>AI</div>
+                  <div className="avatar" style={{ borderRadius: 'var(--radius-lg)' }}>AI</div>
                 )}
-                <div style={msg.role === 'user' ? ws.msgBubbleUser : ws.msgBubbleAi}>
+                <div className={`bubble ${msg.role}`}>
                   {msg.content}
                 </div>
                 {msg.role === 'user' && (
-                  <div style={ws.userBubbleIcon}>
+                  <div className="avatar" style={{ background: 'var(--text-main)' }}>
                     {currentUser?.username?.[0]?.toUpperCase() ?? 'U'}
                   </div>
                 )}
@@ -386,20 +381,17 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             ))}
 
             {isAiLoading && (
-              <div style={ws.msgRowAi}>
-                <div style={ws.aiBubbleIcon}>AI</div>
-                <div style={ws.msgBubbleAi}>
-                  <span className="typing-dots">
-                    <span /><span /><span />
-                  </span>
+              <div className="msg-row assistant">
+                <div className="avatar" style={{ borderRadius: 'var(--radius-lg)' }}>AI</div>
+                <div className="bubble ai">
+                  <span className="typing-dots"><span /><span /><span /></span>
                 </div>
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
 
-          {/* Input */}
-          <div style={ws.chatInputBar}>
+          <div className="chat-input-bar">
             <textarea
               ref={textareaRef}
               value={chatInput}
@@ -407,366 +399,71 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               onKeyDown={handleTextareaKeyDown}
               placeholder={activeDoc ? `Hỏi về "${activeDoc.title}"…` : 'Nhập câu hỏi…'}
               rows={1}
-              style={ws.chatTextarea}
-              className="chat-textarea"
+              className="input-base chat-textarea"
+              disabled={!activeDoc}
             />
             <button
               onClick={handleSendMessage}
-              disabled={isAiLoading || !chatInput.trim()}
-              style={ws.sendBtn}
-              className="send-btn"
+              disabled={isAiLoading || !chatInput.trim() || !activeDoc}
+              className="btn btn-primary"
+              style={{ width: 44, height: 44, padding: 0, borderRadius: 'var(--radius-xl)' }}
+              aria-label="Send message"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M14 8L2 2L5.5 8L2 14L14 8Z" fill="currentColor"/>
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="white">
+                <path d="M14 8L2 2L5.5 8L2 14L14 8Z" />
               </svg>
             </button>
           </div>
         </main>
 
-        {/* Right tools panel */}
-        <aside style={ws.rightPanel}>
-          <div style={ws.rightHeader}>
-            <span style={ws.rightTitle}>Công cụ AI</span>
+        {/* Right Tools Panel */}
+        <aside className="tool-panel">
+          <div className="sidebar-header">
+            <span className="sidebar-title">Công cụ AI Học Tập</span>
           </div>
 
-          <div style={ws.toolButtons}>
+          <div className="tool-actions">
             <button
               onClick={handleSummarize}
               disabled={!activeDocId || isToolLoading}
-              style={ws.toolBtn}
-              className="tool-btn"
+              className="btn btn-secondary"
+              style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
             >
-              <span style={ws.toolBtnIcon}>◎</span>
-              <span>Tóm tắt tài liệu</span>
+              <span style={{ color: 'var(--primary)' }}>◎</span> Tóm tắt tài liệu
             </button>
             <button
               onClick={handleGenerateQuiz}
               disabled={!activeDocId || isToolLoading}
-              style={ws.toolBtn}
-              className="tool-btn"
+              className="btn btn-secondary"
+              style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
             >
-              <span style={ws.toolBtnIcon}>⚡</span>
-              <span>Tạo quiz</span>
+              <span style={{ color: 'var(--primary)' }}>⚡</span> Tạo bài tập (Quiz)
             </button>
           </div>
 
-          {/* Tool output */}
           {activeToolPanel && (
-            <div style={ws.toolOutput}>
-              <div style={ws.toolOutputHeader}>
-                <span style={ws.toolOutputTitle}>
-                  {activeToolPanel === 'summary' ? '◎ Tóm tắt' : '⚡ Quiz'}
+            <div className="card tool-output">
+              <div className="tool-output-head">
+                <span className="sidebar-title" style={{ color: 'var(--primary)' }}>
+                  {activeToolPanel === 'summary' ? '◎ BẢN TÓM TẮT' : '⚡ BÀI TẬP QUIZ'}
                 </span>
-                <button onClick={() => setActiveToolPanel(null)} style={ws.closeBtn} className="close-btn">✕</button>
+                <button onClick={() => setActiveToolPanel(null)} className="btn btn-icon" style={{ width: 24, height: 24 }}>✕</button>
               </div>
-              <div style={ws.toolOutputBody}>
+              <div className="tool-output-body">
                 {isToolLoading ? (
-                  <div style={ws.toolLoading}>
-                    <span className="spinner-blue" />
-                    <span style={{ fontSize: '13px', color: '#64748b' }}>Đang tạo nội dung…</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="spinner" style={{ color: 'var(--primary)', width: 14, height: 14 }} />
+                    Đang AI đang phân tích…
                   </div>
                 ) : (
-                  <pre style={ws.toolOutputText}>{toolContent}</pre>
+                  <div>{toolContent}</div>
                 )}
               </div>
             </div>
           )}
-
-          {/* Keyboard shortcuts */}
-          <div style={ws.shortcutBox}>
-            <p style={ws.shortcutTitle}>Phím tắt</p>
-            <div style={ws.shortcutRow}>
-              <kbd style={ws.kbd}>Enter</kbd>
-              <span style={ws.shortcutLabel}>Gửi câu hỏi</span>
-            </div>
-            <div style={ws.shortcutRow}>
-              <kbd style={ws.kbd}>Shift+Enter</kbd>
-              <span style={ws.shortcutLabel}>Xuống dòng</span>
-            </div>
-          </div>
         </aside>
+
       </div>
     </div>
   )
-}
-
-const workspaceCss = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-  * { box-sizing: border-box; }
-
-  .icon-btn:hover { background: #f1f5f9 !important; }
-  .logout-btn:hover { background: #f1f5f9 !important; color: #dc2626 !important; }
-  .upload-btn:hover:not(:disabled) { background: #eff6ff !important; border-color: #1a56db !important; color: #1a56db !important; }
-  .doc-item:hover { background: #f8fafc !important; }
-  .doc-item.active { background: #eff6ff !important; border-left: 2px solid #1a56db !important; }
-  .delete-btn { opacity: 0; transition: opacity 0.15s; }
-  .doc-item:hover .delete-btn { opacity: 1 !important; }
-  .delete-btn:hover { color: #dc2626 !important; }
-  .tool-btn:hover:not(:disabled) { background: #eff6ff !important; border-color: #1a56db !important; color: #1a56db !important; }
-  .tool-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .close-btn:hover { background: #f1f5f9 !important; }
-  .chat-textarea:focus { outline: none; border-color: #1a56db !important; box-shadow: 0 0 0 3px rgba(26,86,219,0.1) !important; }
-  .send-btn:hover:not(:disabled) { background: #1648c0 !important; }
-  .send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-
-  .spinner {
-    display: inline-block; width: 14px; height: 14px;
-    border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
-    border-radius: 50%; animation: spin 0.7s linear infinite;
-  }
-  .spinner-dark {
-    display: inline-block; width: 12px; height: 12px;
-    border: 2px solid #d1d5db; border-top-color: #1a56db;
-    border-radius: 50%; animation: spin 0.7s linear infinite;
-  }
-  .spinner-blue {
-    display: inline-block; width: 12px; height: 12px;
-    border: 2px solid #bfdbfe; border-top-color: #1a56db;
-    border-radius: 50%; animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .typing-dots { display: inline-flex; gap: 4px; align-items: center; padding: 2px 0; }
-  .typing-dots span {
-    display: inline-block; width: 6px; height: 6px;
-    border-radius: 50%; background: #94a3b8;
-    animation: typingBounce 1.2s infinite;
-  }
-  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes typingBounce {
-    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-    40% { transform: translateY(-4px); opacity: 1; }
-  }
-`
-
-const ws: Record<string, React.CSSProperties> = {
-  shell: {
-    display: 'flex', flexDirection: 'column', height: '100vh',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-    background: '#f8fafc', color: '#0f172a',
-  },
-
-  // Topbar
-  topbar: {
-    height: '52px', background: '#ffffff',
-    borderBottom: '1px solid #e2e8f0',
-    display: 'flex', alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 16px', flexShrink: 0,
-    zIndex: 10,
-  },
-  topbarLeft: { display: 'flex', alignItems: 'center', gap: '8px' },
-  topbarRight: { display: 'flex', alignItems: 'center', gap: '12px' },
-  iconBtn: {
-    width: '32px', height: '32px', borderRadius: '6px',
-    border: 'none', background: 'transparent',
-    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: '#64748b', transition: 'background 0.15s',
-  },
-  topbarBrand: { display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '4px' },
-  brandLabel: {
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '14px', fontWeight: 500, color: '#0f172a',
-  },
-  breadcrumb: { display: 'flex', alignItems: 'center', gap: '6px' },
-  breadcrumbSep: { color: '#cbd5e1', fontSize: '14px' },
-  breadcrumbItem: { fontSize: '13px', color: '#64748b', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  userBadge: { display: 'flex', alignItems: 'center', gap: '8px' },
-  avatar: {
-    width: '28px', height: '28px', borderRadius: '50%',
-    background: '#1a56db', color: 'white',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '12px', fontWeight: 600,
-  },
-  username: { fontSize: '13px', color: '#374151', fontWeight: 500 },
-  logoutBtn: {
-    fontSize: '13px', color: '#64748b',
-    border: '1px solid #e2e8f0', borderRadius: '6px',
-    padding: '5px 12px', background: 'white',
-    cursor: 'pointer', transition: 'all 0.15s',
-    fontFamily: "'Inter', sans-serif",
-  },
-
-  // Layout
-  workspace: { display: 'flex', flex: 1, overflow: 'hidden' },
-
-  // Sidebar
-  sidebar: {
-    width: '240px', minWidth: '240px',
-    background: '#ffffff', borderRight: '1px solid #e2e8f0',
-    display: 'flex', flexDirection: 'column', overflow: 'hidden',
-  },
-  sidebarHeader: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '14px 16px', borderBottom: '1px solid #f1f5f9',
-  },
-  sidebarTitle: { fontSize: '12px', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.06em' },
-  docBadge: {
-    background: '#eff6ff', color: '#1a56db',
-    border: '1px solid #bfdbfe', borderRadius: '10px',
-    padding: '1px 8px', fontSize: '11px', fontWeight: 500,
-  },
-  uploadZone: { padding: '12px 14px', borderBottom: '1px solid #f1f5f9' },
-  uploadBtn: {
-    width: '100%', padding: '8px 12px', fontSize: '13px',
-    background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px',
-    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    gap: '6px', color: '#374151', fontWeight: 500,
-    transition: 'all 0.15s', fontFamily: "'Inter', sans-serif",
-  },
-  plusIcon: { fontSize: '16px', lineHeight: 1, color: '#1a56db', fontWeight: 400 },
-  uploadHint: { fontSize: '11px', color: '#9ca3af', textAlign: 'center', marginTop: '6px', fontFamily: "'JetBrains Mono', monospace" },
-  docList: { flex: 1, overflowY: 'auto', padding: '8px 0' },
-  emptyState: { padding: '20px 16px', textAlign: 'center' },
-  emptyText: { fontSize: '13px', color: '#64748b', marginBottom: '4px' },
-  emptyHint: { fontSize: '12px', color: '#9ca3af' },
-  docItem: {
-    display: 'flex', alignItems: 'center', gap: '8px',
-    padding: '8px 14px', cursor: 'pointer',
-    borderLeft: '2px solid transparent',
-    transition: 'all 0.12s',
-  },
-  docItemActive: { background: '#eff6ff', borderLeftColor: '#1a56db' },
-  docTypeBadge: {
-    fontSize: '9px', fontWeight: 600, letterSpacing: '0.04em',
-    background: '#f1f5f9', color: '#64748b',
-    borderRadius: '4px', padding: '2px 5px', flexShrink: 0,
-    fontFamily: "'JetBrains Mono', monospace",
-  },
-  docTypeBadgeActive: { background: '#bfdbfe', color: '#1d4ed8' },
-  docName: { flex: 1, fontSize: '13px', color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  deleteBtn: {
-    background: 'none', border: 'none', cursor: 'pointer',
-    color: '#9ca3af', fontSize: '12px', padding: '0 2px',
-    flexShrink: 0, transition: 'color 0.15s',
-  },
-  statsBlock: {
-    borderTop: '1px solid #f1f5f9', padding: '14px 16px',
-    marginTop: 'auto',
-  },
-  statsTitle: { fontSize: '11px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' },
-  statRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' },
-  statLabel: { fontSize: '12px', color: '#64748b' },
-  statValue: { fontSize: '13px', fontWeight: 600, color: '#1a56db', fontFamily: "'JetBrains Mono', monospace" },
-
-  // Chat
-  chatPanel: {
-    flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden',
-    background: '#f8fafc',
-  },
-  chatHeader: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '12px 20px', background: '#ffffff',
-    borderBottom: '1px solid #e2e8f0', flexShrink: 0,
-  },
-  chatTitle: { fontSize: '14px', fontWeight: 600, color: '#0f172a' },
-  chatContext: { fontSize: '12px', color: '#94a3b8', marginTop: '2px' },
-  thinkingBadge: {
-    display: 'flex', alignItems: 'center', gap: '8px',
-    background: '#eff6ff', border: '1px solid #bfdbfe',
-    borderRadius: '20px', padding: '5px 12px',
-  },
-  thinkingText: { fontSize: '12px', color: '#1a56db' },
-  chatWindow: { flex: 1, overflowY: 'auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '16px' },
-  welcomeCard: {
-    margin: 'auto', textAlign: 'center', maxWidth: '360px',
-    padding: '40px 32px',
-  },
-  welcomeIcon: { fontSize: '32px', color: '#1a56db', marginBottom: '16px' },
-  welcomeTitle: { fontSize: '16px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' },
-  welcomeText: { fontSize: '14px', color: '#64748b', lineHeight: 1.6 },
-  msgRowUser: { display: 'flex', gap: '10px', justifyContent: 'flex-end', alignItems: 'flex-start' },
-  msgRowAi: { display: 'flex', gap: '10px', alignItems: 'flex-start' },
-  aiBubbleIcon: {
-    width: '28px', height: '28px', borderRadius: '8px',
-    background: '#1a56db', color: 'white',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '10px', fontWeight: 700, flexShrink: 0,
-    fontFamily: "'JetBrains Mono', monospace",
-  },
-  userBubbleIcon: {
-    width: '28px', height: '28px', borderRadius: '50%',
-    background: '#0f172a', color: 'white',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '12px', fontWeight: 600, flexShrink: 0,
-  },
-  msgBubbleAi: {
-    background: '#ffffff', border: '1px solid #e2e8f0',
-    borderRadius: '4px 12px 12px 12px',
-    padding: '10px 14px', fontSize: '14px', lineHeight: 1.65,
-    color: '#0f172a', maxWidth: '80%',
-  },
-  msgBubbleUser: {
-    background: '#1a56db', color: 'white',
-    borderRadius: '12px 4px 12px 12px',
-    padding: '10px 14px', fontSize: '14px', lineHeight: 1.65, maxWidth: '80%',
-  },
-  chatInputBar: {
-    display: 'flex', gap: '10px', padding: '12px 20px',
-    background: '#ffffff', borderTop: '1px solid #e2e8f0', flexShrink: 0,
-  },
-  chatTextarea: {
-    flex: 1, padding: '9px 14px', fontSize: '14px', color: '#0f172a',
-    background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px',
-    resize: 'none', outline: 'none', lineHeight: 1.5,
-    fontFamily: "'Inter', sans-serif", maxHeight: '120px', overflowY: 'auto',
-    transition: 'border-color 0.15s, box-shadow 0.15s',
-  },
-  sendBtn: {
-    width: '40px', height: '40px', borderRadius: '10px',
-    background: '#1a56db', color: 'white', border: 'none',
-    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0, alignSelf: 'flex-end', transition: 'background 0.15s',
-  },
-
-  // Right panel
-  rightPanel: {
-    width: '220px', minWidth: '220px',
-    background: '#ffffff', borderLeft: '1px solid #e2e8f0',
-    display: 'flex', flexDirection: 'column', overflow: 'hidden',
-  },
-  rightHeader: {
-    padding: '14px 16px', borderBottom: '1px solid #f1f5f9',
-  },
-  rightTitle: { fontSize: '12px', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.06em' },
-  toolButtons: { padding: '12px 12px 0', display: 'flex', flexDirection: 'column', gap: '8px' },
-  toolBtn: {
-    width: '100%', padding: '9px 12px', fontSize: '13px',
-    background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px',
-    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-    color: '#374151', fontWeight: 500, textAlign: 'left',
-    transition: 'all 0.15s', fontFamily: "'Inter', sans-serif",
-  },
-  toolBtnIcon: { color: '#1a56db', fontSize: '14px', width: '16px', textAlign: 'center' },
-  toolOutput: {
-    margin: '12px', border: '1px solid #e2e8f0', borderRadius: '10px',
-    overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column',
-  },
-  toolOutputHeader: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '8px 12px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0',
-  },
-  toolOutputTitle: { fontSize: '11px', fontWeight: 600, color: '#1a56db', fontFamily: "'JetBrains Mono', monospace" },
-  closeBtn: {
-    background: 'none', border: 'none', cursor: 'pointer',
-    color: '#9ca3af', fontSize: '12px', padding: '2px 6px', borderRadius: '4px',
-    transition: 'background 0.15s',
-  },
-  toolOutputBody: { padding: '12px', overflowY: 'auto', flex: 1 },
-  toolOutputText: {
-    fontSize: '12px', color: '#374151', lineHeight: 1.7,
-    whiteSpace: 'pre-wrap', fontFamily: "'Inter', sans-serif",
-    margin: 0,
-  },
-  toolLoading: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0' },
-  shortcutBox: { padding: '14px 16px', borderTop: '1px solid #f1f5f9', marginTop: 'auto' },
-  shortcutTitle: { fontSize: '11px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' },
-  shortcutRow: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' },
-  kbd: {
-    background: '#f1f5f9', border: '1px solid #e2e8f0',
-    borderRadius: '4px', padding: '1px 6px',
-    fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: '#374151',
-  },
-  shortcutLabel: { fontSize: '12px', color: '#94a3b8' },
 }
