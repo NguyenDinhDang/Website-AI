@@ -63,7 +63,7 @@ app.include_router(documents.router, prefix="/api/v1/documents", tags=["Document
 app.include_router(ai.router,        prefix="/api/v1/ai",        tags=["AI"])
 app.include_router(progress.router,  prefix="/api/v1/progress",  tags=["Progress"])
 
-app.mount("/assets", StaticFiles(directory=BASE_DIR / "public"), name="assets")
+app.mount("/assets", StaticFiles(directory=BASE_DIR / "frontend" / "public"), name="assets")
 
 
 @app.get("/health", tags=["Health"])
