@@ -28,8 +28,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    OPENAI_API_KEY: str = ""
-    OPENAI_MODEL_NAME: str = "gpt-4o-mini"
+    #OPENAI_API_KEY: str = ""
+    #OPENAI_MODEL_NAME: str = "gpt-4o-mini"
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL_NAME: str = "gemini-1.5-flash"
     AI_MAX_RETRIES: int = 3
     AI_RETRY_DELAY: float = 1.0
     AI_REQUEST_TIMEOUT: int = 60
