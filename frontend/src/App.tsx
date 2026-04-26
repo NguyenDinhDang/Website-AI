@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AuthPage } from './pages/AuthPage'
 import { WorkspacePage } from './pages/WorkspacePage'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -43,25 +44,23 @@ export default function App() {
   if (isCheckingAuth) {
     return (
       <div style={{
-        height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#f8fafc', fontFamily: 'Inter, sans-serif',
+        height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: '32px', height: '32px',
-            border: '3px solid #e2e8f0', borderTopColor: '#1a56db',
-            borderRadius: '50%', animation: 'spin 0.7s linear infinite',
-          }} />
-          <p style={{ fontSize: '14px', color: '#64748b' }}>Đang tải…</p>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <div className="spinner" style={{ color: 'var(--primary)', width: '32px', height: '32px', borderBottomColor: 'transparent', borderLeftColor: 'transparent' }} />
+          <p style={{ color: 'var(--text-muted)' }}>Đang tải…</p>
         </div>
       </div>
     )
   }
 
-  if (!isAuthenticated) {
-    return <AuthPage onAuthSuccess={handleAuthSuccess} />
-  }
-
-  return <WorkspacePage onLogout={handleLogout} />
+  return (
+    <ErrorBoundary>
+      {!isAuthenticated ? (
+        <AuthPage onAuthSuccess={handleAuthSuccess} />
+      ) : (
+        <WorkspacePage onLogout={handleLogout} />
+      )}
+    </ErrorBoundary>
+  )
 }
