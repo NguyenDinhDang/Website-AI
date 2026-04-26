@@ -1,3 +1,4 @@
+import { useState } from 'react'
 interface RegisterFormProps {
   onSubmit: (email: string, username: string, password: string, fullName: string) => void
   isLoading: boolean
