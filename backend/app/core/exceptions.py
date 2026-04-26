@@ -26,11 +26,22 @@ async def app_exception_handler(request: Request, exc: AppException):
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    errors = exc.errors()
-    first_msg = errors[0].get("msg", "Validation error") if errors else "Validation error"
+    raw_errors = exc.errors()
+    first_error_msg = raw_errors[0].get("msg", "Validation error") if raw_errors else "Validation error"
+
+    serializable_errors = []
+    for error_item in raw_errors:
+        sanitized_item = {key: value for key, value in error_item.items() if key != "ctx"}
+        if "ctx" in error_item:
+            sanitized_item["ctx"] = {
+                ctx_key: str(ctx_value)
+                for ctx_key, ctx_value in error_item["ctx"].items()
+            }
+        serializable_errors.append(sanitized_item)
+
     return JSONResponse(
         status_code=422,
-        content={"detail": first_msg, "errors": errors},
+        content={"detail": first_error_msg, "errors": serializable_errors},
     )
 
 
