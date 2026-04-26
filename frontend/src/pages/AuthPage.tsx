@@ -102,10 +102,10 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
 
           <div style={styles.featureList}>
             {[
-              { icon: '◈', label: 'Chat AI theo ngữ cảnh tài liệu' },
-              { icon: '⚡', label: 'Tạo quiz trắc nghiệm tự động' },
-              { icon: '◎', label: 'Tóm tắt tài liệu thông minh' },
-              { icon: '↗', label: 'Theo dõi tiến độ học tập' },
+              { icon: '.', label: 'Chat AI theo ngữ cảnh tài liệu' },
+              { icon: '.', label: 'Tạo quiz trắc nghiệm tự động' },
+              { icon: '.', label: 'Tóm tắt tài liệu thông minh' },
+              { icon: '.', label: 'Theo dõi tiến độ học tập' },
             ].map((item) => (
               <div key={item.label} style={styles.featureItem}>
                 <span style={styles.featureIcon}>{item.icon}</span>
@@ -220,7 +220,7 @@ export function AuthPage({ onAuthSuccess }: AuthPageProps) {
                   <label style={styles.label}>Họ và tên</label>
                   <input
                     type="text"
-                    placeholder="Nguyễn Văn A"
+                    placeholder="Developer AI"
                     value={regFullName}
                     onChange={(e) => setRegFullName(e.target.value)}
                     style={styles.input}

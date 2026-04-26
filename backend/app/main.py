@@ -21,7 +21,7 @@ from app.core.exceptions import (
 )
 from app.core.logging import setup_logging
 from app.database.session import init_db
-from app.routers import ai, auth, documents, progress, web
+from app.routers import ai, auth, documents, progress
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -62,7 +62,6 @@ app.include_router(auth.router,      prefix="/api/v1/auth",      tags=["Auth"])
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
 app.include_router(ai.router,        prefix="/api/v1/ai",        tags=["AI"])
 app.include_router(progress.router,  prefix="/api/v1/progress",  tags=["Progress"])
-app.include_router(web.router,       tags=["Web"])
 
 app.mount("/assets", StaticFiles(directory=BASE_DIR / "public"), name="assets")
 
