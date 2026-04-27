@@ -407,7 +407,6 @@
   font-size: var(--text-sm);
   color: var(--text-secondary);
   line-height: 1.6;
-  white-space: pre-wrap;
 }
 
 .typing-dots span {
@@ -421,4 +420,49 @@
 @keyframes typingBounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
   40% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Markdown Typography */
+.markdown-body {
+  word-wrap: break-word;
+}
+.markdown-body p, 
+.markdown-body ul, 
+.markdown-body ol {
+  margin-bottom: var(--space-3);
+  padding-bottom: 0;
+}
+.markdown-body p:last-child, 
+.markdown-body ul:last-child,
+.markdown-body ol:last-child {
+  margin-bottom: 0;
+}
+.markdown-body strong {
+  font-weight: 600;
+  color: var(--primary);
+}
+.markdown-body ul {
+  padding-left: var(--space-5);
+  list-style-type: disc;
+}
+.markdown-body ol {
+  padding-left: var(--space-5);
+  list-style-type: decimal;
+}
+.markdown-body li {
+  margin-bottom: var(--space-1);
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+  color: var(--text-main);
+}
+.markdown-body code {
+  background: var(--bg-hover);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--primary);
 }

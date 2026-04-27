@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import '../styles/WorkspacePage.css'
 
 interface UserResponse {
@@ -370,7 +372,15 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                   <div className="avatar" style={{ borderRadius: 'var(--radius-lg)' }}>AI</div>
                 )}
                 <div className={`bubble ${msg.role}`}>
-                  {msg.content}
+                  {msg.role === 'assistant' ? (
+                    <div className="markdown-body">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
                 {msg.role === 'user' && (
                   <div className="avatar" style={{ background: 'var(--text-main)' }}>
@@ -456,7 +466,11 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                     Đang AI đang phân tích…
                   </div>
                 ) : (
-                  <div>{toolContent}</div>
+                  <div className="markdown-body">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {toolContent}
+                    </ReactMarkdown>
+                  </div>
                 )}
               </div>
             </div>
