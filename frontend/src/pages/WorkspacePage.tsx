@@ -60,7 +60,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
   const chatScrollAnchorRef = useRef<HTMLDivElement>(null)
   const fileUploadInputRef = useRef<HTMLInputElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const chatTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     // Media query to default sidebar to open on desktop
@@ -159,7 +159,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     const message = chatInputValue.trim()
     if (!message || isAssistantTyping) return
     setChatInputValue('')
-    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    if (chatTextareaRef.current) chatTextareaRef.current.style.height = 'auto'
 
     const userMessage: ChatMessage = { role: 'user', content: message }
     setChatMessages(prev => [...prev, userMessage])
@@ -403,7 +403,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
           <div className="chat-input-bar">
             <textarea
-              ref={textareaRef}
+              ref={chatTextareaRef}
               value={chatInputValue}
               onChange={handleTextareaInput}
               onKeyDown={handleTextareaKeyDown}
