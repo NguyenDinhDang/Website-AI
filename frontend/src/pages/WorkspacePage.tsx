@@ -53,7 +53,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [isAssistantTyping, setIsAssistantTyping] = useState(false)
   const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [activeTool, setActiveTool] = useState<'summary' | 'quiz' | null>(null)
-  const [toolContent, setToolContent] = useState('')
+  const [toolResultContent, setToolResultContent] = useState('')
   const [isToolLoading, setIsToolLoading] = useState(false)
   const [progress, setProgress] = useState({ total_documents: 0, total_chats: 0, total_quizzes: 0, accuracy: 0 })
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -108,7 +108,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   async function handleSelectDoc(docId: number) {
     setActiveDocumentId(docId)
     setActiveTool(null)
-    setToolContent('')
+    setToolResultContent('')
     if (window.innerWidth < 768) setSidebarOpen(false); // auto close on mobile
     await loadChatHistory(docId)
   }
@@ -182,11 +182,11 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
     setActiveTool('summary')
     setIsToolLoading(true)
-    setToolContent('')
+    setToolResultContent('')
     try {
       const data = await fetchFromApi('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentumentumentId }) })
-      setToolContent(data.summary)
-    } catch { setToolContent('Không thể tạo tóm tắt. Thử lại sau.') }
+      setToolResultContent(data.summary)
+    } catch { setToolResultContent('Không thể tạo tóm tắt. Thử lại sau.') }
     finally { setIsToolLoading(false) }
   }
 
@@ -194,15 +194,15 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
     setActiveTool('quiz')
     setIsToolLoading(true)
-    setToolContent('')
+    setToolResultContent('')
     try {
       const data = await fetchFromApi('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentumentumentId, num_questions: 5 }) })
       const formatted = data.questions.map((q: { question: string; options: string[]; explanation: string }, i: number) =>
         `${i + 1}. ${q.question}\n${q.options.map((opt: string, j: number) => `   ${String.fromCharCode(65 + j)}. ${opt}`).join('\n')}\n→ ${q.explanation}`
       ).join('\n\n')
-      setToolContent(formatted)
+      setToolResultContent(formatted)
       setProgress(prev => ({ ...prev, total_quizzes: prev.total_quizzes + data.questions.length }))
-    } catch { setToolContent('Không thể tạo quiz. Thử lại sau.') }
+    } catch { setToolResultContent('Không thể tạo quiz. Thử lại sau.') }
     finally { setIsToolLoading(false) }
   }
 
@@ -468,7 +468,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 ) : (
                   <div className="markdown-body">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {toolContent}
+                      {toolResultContent}
                     </ReactMarkdown>
                   </div>
                 )}
