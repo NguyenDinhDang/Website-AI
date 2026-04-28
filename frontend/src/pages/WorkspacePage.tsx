@@ -49,7 +49,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [activeDocumentumentumentId, setActiveDocumentId] = useState<number | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [chatInput, setChatInput] = useState('')
+  const [chatInputValue, setChatInputValue] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [activeToolPanel, setActiveToolPanel] = useState<'summary' | 'quiz' | null>(null)
@@ -156,9 +156,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   }
 
   async function handleSendMessage() {
-    const message = chatInput.trim()
+    const message = chatInputValue.trim()
     if (!message || isAiLoading) return
-    setChatInput('')
+    setChatInputValue('')
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
 
     const userMessage: ChatMessage = { role: 'user', content: message }
@@ -211,7 +211,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   }
 
   function handleTextareaInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setChatInput(e.target.value)
+    setChatInputValue(e.target.value)
     e.target.style.height = 'auto'
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
   }
@@ -404,7 +404,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           <div className="chat-input-bar">
             <textarea
               ref={textareaRef}
-              value={chatInput}
+              value={chatInputValue}
               onChange={handleTextareaInput}
               onKeyDown={handleTextareaKeyDown}
               placeholder={activeDocumentument ? `Hỏi về "${activeDocumentument.title}"…` : 'Nhập câu hỏi…'}
@@ -414,7 +414,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             />
             <button
               onClick={handleSendMessage}
-              disabled={isAiLoading || !chatInput.trim() || !activeDocumentument}
+              disabled={isAiLoading || !chatInputValue.trim() || !activeDocumentument}
               className="btn btn-primary"
               style={{ width: 44, height: 44, padding: 0, borderRadius: 'var(--radius-xl)' }}
               aria-label="Send message"
