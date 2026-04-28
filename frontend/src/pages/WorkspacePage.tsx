@@ -27,14 +27,14 @@ interface WorkspaceProps {
   onLogout: () => void
 }
 
-function getToken() { return localStorage.getItem('access_token') || '' }
+const getAccessToken = () => localStorage.getItem('access_token') || '' }
 
 async function apiFetch(path: string, options: RequestInit = {}) {
   const response = await fetch(`/api/v1${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${getToken()}`,
+      'Authorization': `Bearer ${getAccessToken()}`,
       ...(options.headers || {}),
     },
   })
@@ -122,7 +122,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       formData.append('file', file)
       const response = await fetch('/api/v1/documents/', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${getToken()}` },
+        headers: { 'Authorization': `Bearer ${getAccessToken()}` },
         body: formData,
       })
       const doc = await response.json()
