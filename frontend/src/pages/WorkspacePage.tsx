@@ -29,7 +29,7 @@ interface WorkspaceProps {
 
 const getAccessToken = () => localStorage.getItem('access_token') || '' }
 
-async function apiFetch(path: string, options: RequestInit = {}) {
+async function fetchFromApi(path: string, options: RequestInit = {}) {
   const response = await fetch(`/api/v1${path}`, {
     ...options,
     headers: {
@@ -77,9 +77,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   async function loadInitialData() {
     try {
       const [user, docs, prog] = await Promise.all([
-        apiFetch('/auth/me'),
-        apiFetch('/documents/'),
-        apiFetch('/progress/'),
+        fetchFromApi('/auth/me'),
+        fetchFromApi('/documents/'),
+        fetchFromApi('/progress/'),
       ])
       setCurrentUser(user)
       setDocuments(docs.items || [])
@@ -97,7 +97,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   async function loadChatHistory(docId: number | null) {
     try {
       const url = docId ? `/ai/chat/history?document_id=${docId}` : '/ai/chat/history'
-      const data = await apiFetch(url)
+      const data = await fetchFromApi(url)
       setChatMessages(data.items.map((item: { role: string; content: string }) => ({
         role: item.role === 'user' ? 'user' : 'assistant',
         content: item.content,
@@ -143,7 +143,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     e.stopPropagation()
     if (!confirm('Xoá tài liệu này?')) return
     try {
-      await apiFetch(`/documents/${docId}`, { method: 'DELETE' })
+      await fetchFromApi(`/documents/${docId}`, { method: 'DELETE' })
       setDocuments(prev => prev.filter(d => d.id !== docId))
       if (activeDocId === docId) {
         const remaining = documents.filter(d => d.id !== docId)
@@ -168,7 +168,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     try {
       const body: { message: string; document_id?: number } = { message }
       if (activeDocId) body.document_id = activeDocId
-      const data = await apiFetch('/ai/chat', { method: 'POST', body: JSON.stringify(body) })
+      const data = await fetchFromApi('/ai/chat', { method: 'POST', body: JSON.stringify(body) })
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.answer }])
       setProgress(prev => ({ ...prev, total_chats: prev.total_chats + 1 }))
     } catch (err) {
@@ -184,7 +184,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     setIsToolLoading(true)
     setToolContent('')
     try {
-      const data = await apiFetch('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocId }) })
+      const data = await fetchFromApi('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocId }) })
       setToolContent(data.summary)
     } catch { setToolContent('Không thể tạo tóm tắt. Thử lại sau.') }
     finally { setIsToolLoading(false) }
@@ -196,7 +196,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     setIsToolLoading(true)
     setToolContent('')
     try {
-      const data = await apiFetch('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocId, num_questions: 5 }) })
+      const data = await fetchFromApi('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocId, num_questions: 5 }) })
       const formatted = data.questions.map((q: { question: string; options: string[]; explanation: string }, i: number) =>
         `${i + 1}. ${q.question}\n${q.options.map((opt: string, j: number) => `   ${String.fromCharCode(65 + j)}. ${opt}`).join('\n')}\n→ ${q.explanation}`
       ).join('\n\n')
