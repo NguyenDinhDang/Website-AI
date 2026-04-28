@@ -52,7 +52,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [chatInputValue, setChatInputValue] = useState('')
   const [isAssistantTyping, setIsAssistantTyping] = useState(false)
   const [isUploadingDocument, setIsUploadingDocument] = useState(false)
-  const [activeToolPanel, setActiveToolPanel] = useState<'summary' | 'quiz' | null>(null)
+  const [activeTool, setActiveTool] = useState<'summary' | 'quiz' | null>(null)
   const [toolContent, setToolContent] = useState('')
   const [isToolLoading, setIsToolLoading] = useState(false)
   const [progress, setProgress] = useState({ total_documents: 0, total_chats: 0, total_quizzes: 0, accuracy: 0 })
@@ -107,7 +107,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
   async function handleSelectDoc(docId: number) {
     setActiveDocumentId(docId)
-    setActiveToolPanel(null)
+    setActiveTool(null)
     setToolContent('')
     if (window.innerWidth < 768) setSidebarOpen(false); // auto close on mobile
     await loadChatHistory(docId)
@@ -180,7 +180,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
   async function handleSummarize() {
     if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
-    setActiveToolPanel('summary')
+    setActiveTool('summary')
     setIsToolLoading(true)
     setToolContent('')
     try {
@@ -192,7 +192,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
   async function handleGenerateQuiz() {
     if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
-    setActiveToolPanel('quiz')
+    setActiveTool('quiz')
     setIsToolLoading(true)
     setToolContent('')
     try {
@@ -451,13 +451,13 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             </button>
           </div>
 
-          {activeToolPanel && (
+          {activeTool && (
             <div className="card tool-output">
               <div className="tool-output-head">
                 <span className="sidebar-title" style={{ color: 'var(--primary)' }}>
-                  {activeToolPanel === 'summary' ? '◎ BẢN TÓM TẮT' : '⚡ BÀI TẬP QUIZ'}
+                  {activeTool === 'summary' ? '◎ BẢN TÓM TẮT' : '⚡ BÀI TẬP QUIZ'}
                 </span>
-                <button onClick={() => setActiveToolPanel(null)} className="btn btn-icon" style={{ width: 24, height: 24 }}>✕</button>
+                <button onClick={() => setActiveTool(null)} className="btn btn-icon" style={{ width: 24, height: 24 }}>✕</button>
               </div>
               <div className="tool-output-body">
                 {isToolLoading ? (
