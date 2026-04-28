@@ -56,7 +56,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [toolResultContent, setToolResultContent] = useState('')
   const [isToolProcessing, setIsToolProcessing] = useState(false)
   const [learningProgress, setLearningProgress] = useState({ totalDocuments: 0, totalChats: 0, totalQuizzes: 0, accuracy: 0 })
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -65,7 +65,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   useEffect(() => {
     // Media query to default sidebar to open on desktop
     const isDesktop = window.matchMedia('(min-width: 768px)').matches;
-    if (isDesktop) setSidebarOpen(true);
+    if (isDesktop) setIsSidebarVisible(true);
     
     loadInitialData()
   }, [])
@@ -109,7 +109,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     setActiveDocumentId(docId)
     setActiveTool(null)
     setToolResultContent('')
-    if (window.innerWidth < 768) setSidebarOpen(false); // auto close on mobile
+    if (window.innerWidth < 768) setIsSidebarVisible(false); // auto close on mobile
     await loadChatHistory(docId)
   }
 
@@ -223,7 +223,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       {/* Top bar */}
       <header className="topbar">
         <div className="topbar-left">
-          <button onClick={() => setSidebarOpen(s => !s)} className="btn btn-icon" title="Toggle sidebar" aria-label="Toggle sidebar">
+          <button onClick={() => setIsSidebarVisible(s => !s)} className="btn btn-icon" title="Toggle sidebar" aria-label="Toggle sidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="3" y1="12" x2="21" y2="12"></line>
               <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -261,7 +261,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       <div className="workspace-body">
         
         {/* Sidebar Panel */}
-        <aside className={`sidebar ${sidebarOpen ? '' : 'hidden'}`}>
+        <aside className={`sidebar ${isSidebarVisible ? '' : 'hidden'}`}>
           <div className="sidebar-header">
             <span className="sidebar-title">Tài liệu của bạn</span>
             <span className="badge badge-blue">{documents.length}</span>
