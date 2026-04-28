@@ -59,7 +59,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false)
 
   const chatScrollAnchorRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileUploadInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       alert(err instanceof Error ? err.message : 'Upload thất bại')
     } finally {
       setIsUploadingDocument(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (fileUploadInputRef.current) fileUploadInputRef.current.value = ''
     }
   }
 
@@ -269,7 +269,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
           <div className="upload-zone">
             <input
-              ref={fileInputRef}
+              ref={fileUploadInputRef}
               type="file"
               accept=".pdf,.txt,.md,.docx"
               onChange={handleUpload}
@@ -277,7 +277,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               aria-label="Upload document"
             />
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => fileUploadInputRef.current?.click()}
               disabled={isUploadingDocument}
               className="btn btn-secondary"
               style={{ width: '100%', justifyContent: 'center' }}
