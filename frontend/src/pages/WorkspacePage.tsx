@@ -155,7 +155,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     }
   }
 
-  async function handleSendMessage() {
+  async function submitChatMessage() {
     const message = chatInputValue.trim()
     if (!message || isAssistantTyping) return
     setChatInputValue('')
@@ -207,7 +207,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   }
 
   function handleTextareaKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage() }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitChatMessage() }
   }
 
   function handleTextareaInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -413,7 +413,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               disabled={!activeDocumentument}
             />
             <button
-              onClick={handleSendMessage}
+              onClick={submitChatMessage}
               disabled={isAssistantTyping || !chatInputValue.trim() || !activeDocumentument}
               className="btn btn-primary"
               style={{ width: 44, height: 44, padding: 0, borderRadius: 'var(--radius-xl)' }}
