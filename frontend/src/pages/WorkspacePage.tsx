@@ -190,7 +190,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     finally { setIsToolProcessing(false) }
   }
 
-  async function handleGenerateQuiz() {
+  async function requestQuizGeneration() {
     if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
     setActiveTool('quiz')
     setIsToolProcessing(true)
@@ -442,7 +442,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               <span style={{ color: 'var(--primary)' }}>◎</span> Tóm tắt tài liệu
             </button>
             <button
-              onClick={handleGenerateQuiz}
+              onClick={requestQuizGeneration}
               disabled={!activeDocumentumentumentId || isToolProcessing}
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
