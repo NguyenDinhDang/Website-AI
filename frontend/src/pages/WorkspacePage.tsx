@@ -54,7 +54,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [activeTool, setActiveTool] = useState<'summary' | 'quiz' | null>(null)
   const [toolResultContent, setToolResultContent] = useState('')
-  const [isToolLoading, setIsToolLoading] = useState(false)
+  const [isToolProcessing, setIsToolProcessing] = useState(false)
   const [progress, setProgress] = useState({ total_documents: 0, total_chats: 0, total_quizzes: 0, accuracy: 0 })
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -181,19 +181,19 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   async function handleSummarize() {
     if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
     setActiveTool('summary')
-    setIsToolLoading(true)
+    setIsToolProcessing(true)
     setToolResultContent('')
     try {
       const data = await fetchFromApi('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentumentumentId }) })
       setToolResultContent(data.summary)
     } catch { setToolResultContent('Không thể tạo tóm tắt. Thử lại sau.') }
-    finally { setIsToolLoading(false) }
+    finally { setIsToolProcessing(false) }
   }
 
   async function handleGenerateQuiz() {
     if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
     setActiveTool('quiz')
-    setIsToolLoading(true)
+    setIsToolProcessing(true)
     setToolResultContent('')
     try {
       const data = await fetchFromApi('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentumentumentId, num_questions: 5 }) })
@@ -203,7 +203,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       setToolResultContent(formatted)
       setProgress(prev => ({ ...prev, total_quizzes: prev.total_quizzes + data.questions.length }))
     } catch { setToolResultContent('Không thể tạo quiz. Thử lại sau.') }
-    finally { setIsToolLoading(false) }
+    finally { setIsToolProcessing(false) }
   }
 
   function handleTextareaKeyDown(e: React.KeyboardEvent) {
@@ -435,7 +435,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           <div className="tool-actions">
             <button
               onClick={handleSummarize}
-              disabled={!activeDocumentumentumentId || isToolLoading}
+              disabled={!activeDocumentumentumentId || isToolProcessing}
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
             >
@@ -443,7 +443,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             </button>
             <button
               onClick={handleGenerateQuiz}
-              disabled={!activeDocumentumentumentId || isToolLoading}
+              disabled={!activeDocumentumentumentId || isToolProcessing}
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
             >
@@ -460,7 +460,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 <button onClick={() => setActiveTool(null)} className="btn btn-icon" style={{ width: 24, height: 24 }}>✕</button>
               </div>
               <div className="tool-output-body">
-                {isToolLoading ? (
+                {isToolProcessing ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span className="spinner" style={{ color: 'var(--primary)', width: 14, height: 14 }} />
                     Đang AI đang phân tích…
