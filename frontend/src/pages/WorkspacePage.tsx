@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import '../styles/WorkspacePage.css'
 
-interface UserResponse {
+interface User {
   id: number
   email: string
   username: string
@@ -45,7 +45,7 @@ async function apiFetch(path: string, options: RequestInit = {}) {
 }
 
 export function WorkspacePage({ onLogout }: WorkspaceProps) {
-  const [currentUser, setCurrentUser] = useState<UserResponse | null>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [documents, setDocuments] = useState<Document[]>([])
   const [activeDocId, setActiveDocId] = useState<number | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
