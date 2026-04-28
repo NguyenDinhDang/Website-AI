@@ -47,7 +47,7 @@ async function fetchFromApi(path: string, options: RequestInit = {}) {
 export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [documents, setDocuments] = useState<Document[]>([])
-  const [activeDocumentId, setActiveDocumentId] = useState<number | null>(null)
+  const [activeDocumentumentumentId, setActiveDocumentId] = useState<number | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
@@ -145,7 +145,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     try {
       await fetchFromApi(`/documents/${docId}`, { method: 'DELETE' })
       setDocuments(prev => prev.filter(d => d.id !== docId))
-      if (activeDocumentId === docId) {
+      if (activeDocumentumentumentId === docId) {
         const remaining = documents.filter(d => d.id !== docId)
         setActiveDocumentId(remaining[0]?.id ?? null)
         setChatMessages([])
@@ -167,7 +167,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
     try {
       const body: { message: string; document_id?: number } = { message }
-      if (activeDocumentId) body.document_id = activeDocumentId
+      if (activeDocumentumentumentId) body.document_id = activeDocumentumentumentId
       const data = await fetchFromApi('/ai/chat', { method: 'POST', body: JSON.stringify(body) })
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.answer }])
       setProgress(prev => ({ ...prev, total_chats: prev.total_chats + 1 }))
@@ -179,24 +179,24 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   }
 
   async function handleSummarize() {
-    if (!activeDocumentId) return alert('Chọn tài liệu trước')
+    if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
     setActiveToolPanel('summary')
     setIsToolLoading(true)
     setToolContent('')
     try {
-      const data = await fetchFromApi('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentId }) })
+      const data = await fetchFromApi('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentumentumentId }) })
       setToolContent(data.summary)
     } catch { setToolContent('Không thể tạo tóm tắt. Thử lại sau.') }
     finally { setIsToolLoading(false) }
   }
 
   async function handleGenerateQuiz() {
-    if (!activeDocumentId) return alert('Chọn tài liệu trước')
+    if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
     setActiveToolPanel('quiz')
     setIsToolLoading(true)
     setToolContent('')
     try {
-      const data = await fetchFromApi('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentId, num_questions: 5 }) })
+      const data = await fetchFromApi('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentumentumentId, num_questions: 5 }) })
       const formatted = data.questions.map((q: { question: string; options: string[]; explanation: string }, i: number) =>
         `${i + 1}. ${q.question}\n${q.options.map((opt: string, j: number) => `   ${String.fromCharCode(65 + j)}. ${opt}`).join('\n')}\n→ ${q.explanation}`
       ).join('\n\n')
@@ -216,7 +216,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
   }
 
-  const activeDoc = documents.find(d => d.id === activeDocumentId)
+  const activeDocumentument = documents.find(d => d.id === activeDocumentumentumentId)
 
   return (
     <div className="workspace-layout">
@@ -239,9 +239,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             <span className="brand-label">LearnOS</span>
           </div>
 
-          {activeDoc && (
+          {activeDocumentument && (
             <div className="breadcrumb">
-              <span className="breadcrumb-item" title={activeDoc.title}>{activeDoc.title}</span>
+              <span className="breadcrumb-item" title={activeDocumentument.title}>{activeDocumentument.title}</span>
             </div>
           )}
         </div>
@@ -302,9 +302,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 <div
                   key={doc.id}
                   onClick={() => handleSelectDoc(doc.id)}
-                  className={`doc-item ${doc.id === activeDocumentId ? 'active' : ''}`}
+                  className={`doc-item ${doc.id === activeDocumentumentumentId ? 'active' : ''}`}
                 >
-                  <span className={`badge ${doc.id === activeDocumentId ? 'badge-blue' : 'badge-gray'}`}>
+                  <span className={`badge ${doc.id === activeDocumentumentumentId ? 'badge-blue' : 'badge-gray'}`}>
                     {doc.fileType.toUpperCase()}
                   </span>
                   <span className="doc-name">{doc.title}</span>
@@ -343,7 +343,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             <div>
               <p className="chat-title">Trợ lý AI</p>
               <p className="chat-context">
-                {activeDoc ? `Đang tư vấn dựa trên: ${activeDoc.title}` : 'Vui lòng chọn tài liệu để bắt đầu'}
+                {activeDocumentument ? `Đang tư vấn dựa trên: ${activeDocumentument.title}` : 'Vui lòng chọn tài liệu để bắt đầu'}
               </p>
             </div>
             {isAiLoading && (
@@ -359,8 +359,8 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 <div className="welcome-icon">◈</div>
                 <h3 className="welcome-title">Xin chào, {currentUser?.fullName || currentUser?.username}</h3>
                 <p className="welcome-text">
-                  {activeDoc
-                    ? `Bạn có thể đặt bất kỳ câu hỏi nào liên quan đến nội dung tài liệu "${activeDoc.title}". Tôi sẽ tìm kiếm và trả lời.`
+                  {activeDocumentument
+                    ? `Bạn có thể đặt bất kỳ câu hỏi nào liên quan đến nội dung tài liệu "${activeDocumentument.title}". Tôi sẽ tìm kiếm và trả lời.`
                     : 'Tải lên một tài liệu ở cột bên trái và chọn nó để bắt đầu trải nghiệm học tập cùng AI.'}
                 </p>
               </div>
@@ -407,14 +407,14 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               value={chatInput}
               onChange={handleTextareaInput}
               onKeyDown={handleTextareaKeyDown}
-              placeholder={activeDoc ? `Hỏi về "${activeDoc.title}"…` : 'Nhập câu hỏi…'}
+              placeholder={activeDocumentument ? `Hỏi về "${activeDocumentument.title}"…` : 'Nhập câu hỏi…'}
               rows={1}
               className="input-base chat-textarea"
-              disabled={!activeDoc}
+              disabled={!activeDocumentument}
             />
             <button
               onClick={handleSendMessage}
-              disabled={isAiLoading || !chatInput.trim() || !activeDoc}
+              disabled={isAiLoading || !chatInput.trim() || !activeDocumentument}
               className="btn btn-primary"
               style={{ width: 44, height: 44, padding: 0, borderRadius: 'var(--radius-xl)' }}
               aria-label="Send message"
@@ -435,7 +435,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           <div className="tool-actions">
             <button
               onClick={handleSummarize}
-              disabled={!activeDocumentId || isToolLoading}
+              disabled={!activeDocumentumentumentId || isToolLoading}
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
             >
@@ -443,7 +443,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             </button>
             <button
               onClick={handleGenerateQuiz}
-              disabled={!activeDocumentId || isToolLoading}
+              disabled={!activeDocumentumentumentId || isToolLoading}
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
             >
