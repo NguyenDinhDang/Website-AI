@@ -55,7 +55,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [activeTool, setActiveTool] = useState<'summary' | 'quiz' | null>(null)
   const [toolResultContent, setToolResultContent] = useState('')
   const [isToolProcessing, setIsToolProcessing] = useState(false)
-  const [learningProgress, setLearningProgress] = useState({ total_documents: 0, total_chats: 0, total_quizzes: 0, accuracy: 0 })
+  const [learningProgress, setLearningProgress] = useState({ totalDocuments: 0, totalChats: 0, totalQuizzes: 0, accuracy: 0 })
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -130,7 +130,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       setDocuments(prev => [doc, ...prev])
       setActiveDocumentId(doc.id)
       setChatMessages([])
-      setLearningProgress(prev => ({ ...prev, total_documents: prev.total_documents + 1 }))
+      setLearningProgress(prev => ({ ...prev, totalDocuments: prev.totalDocuments + 1 }))
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Upload thất bại')
     } finally {
@@ -170,7 +170,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       if (activeDocumentumentumentId) body.document_id = activeDocumentumentumentId
       const data = await fetchFromApi('/ai/chat', { method: 'POST', body: JSON.stringify(body) })
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.answer }])
-      setLearningProgress(prev => ({ ...prev, total_chats: prev.total_chats + 1 }))
+      setLearningProgress(prev => ({ ...prev, totalChats: prev.totalChats + 1 }))
     } catch (err) {
       setChatMessages(prev => [...prev, { role: 'assistant', content: '⚠ Có lỗi xảy ra. Vui lòng thử lại.' }])
     } finally {
@@ -201,7 +201,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
         `${i + 1}. ${q.question}\n${q.options.map((opt: string, j: number) => `   ${String.fromCharCode(65 + j)}. ${opt}`).join('\n')}\n→ ${q.explanation}`
       ).join('\n\n')
       setToolResultContent(formatted)
-      setLearningProgress(prev => ({ ...prev, total_quizzes: prev.total_quizzes + data.questions.length }))
+      setLearningProgress(prev => ({ ...prev, totalQuizzes: prev.totalQuizzes + data.questions.length }))
     } catch { setToolResultContent('Không thể tạo quiz. Thử lại sau.') }
     finally { setIsToolProcessing(false) }
   }
@@ -324,9 +324,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           <div className="stats-block">
             <div className="sidebar-title" style={{ marginBottom: 'var(--space-2)' }}>Thống kê học tập</div>
             {[
-              { label: 'Tài liệu', value: learningProgress.total_documents },
-              { label: 'Lượt chat', value: learningProgress.total_chats },
-              { label: 'Bài quiz', value: learningProgress.total_quizzes },
+              { label: 'Tài liệu', value: learningProgress.totalDocuments },
+              { label: 'Lượt chat', value: learningProgress.totalChats },
+              { label: 'Bài quiz', value: learningProgress.totalQuizzes },
               { label: 'Độ chính xác', value: `${learningProgress.accuracy}%` },
             ].map(stat => (
               <div key={stat.label} className="stat-row">
