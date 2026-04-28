@@ -139,7 +139,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     }
   }
 
-  async function handleDeleteDoc(docId: number, e: React.MouseEvent) {
+  async function handleDocumentDeletion(docId: number, e: React.MouseEvent) {
     e.stopPropagation()
     if (!confirm('Xoá tài liệu này?')) return
     try {
@@ -309,7 +309,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                   </span>
                   <span className="doc-name">{doc.title}</span>
                   <button
-                    onClick={(e) => handleDeleteDoc(doc.id, e)}
+                    onClick={(e) => handleDocumentDeletion(doc.id, e)}
                     className="delete-btn"
                     title="Xoá tài liệu"
                     aria-label="Delete document"
