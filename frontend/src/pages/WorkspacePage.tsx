@@ -473,8 +473,8 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           </aside>
         )}
 
-        <main className="flex-1 flex flex-col min-w-0 bg-white">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#d0d7de]">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#f6f8fa]">
+          <div className="flex items-center justify-between px-8 py-5 border-b border-[#d0d7de] bg-white">
             <div>
               <h1 className="text-lg font-semibold text-[#24292f]">Assistant</h1>
               <p className="text-sm text-[#57606a] mt-0.5">
@@ -545,7 +545,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             <div ref={chatScrollAnchorRef} />
           </div>
 
-          <div className="p-4 bg-white border-t border-[#d0d7de]">
+          <div className="px-8 py-6 bg-[#f6f8fa] border-t border-[#d0d7de] flex flex-col items-center">
             <div className="max-w-4xl mx-auto relative flex items-end gap-2">
               <textarea
                 ref={chatTextareaRef}
