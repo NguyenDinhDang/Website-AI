@@ -288,8 +288,8 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
         const optionsList = quizItem.options.map((optionText: string, optionIndex: number) => 
           `   ${String.fromCharCode(65 + optionIndex)}. ${optionText}`
         ).join('\n');
-        return `${index + 1}. ${quizItem.question}\n${optionsList}\n\n**Explanation**: ${quizItem.explanation}`;
-      }).join('\n\n---\n\n');
+        return `**${index + 1}. ${quizItem.question}**\n${optionsList}\n\n*Explanation*: ${quizItem.explanation}`;
+      }).join('\n\n');
       
       setToolResultContent(formattedQuizContent);
       setLearningProgress(previousProgress => ({ 
@@ -324,13 +324,24 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
   };
 
+  const MarkdownComponents = {
+    p: ({node, ...props}: any) => <p className="bg-white border border-[#d0d7de] rounded-xl p-5 mb-4 text-[14px] leading-[1.6] text-[#24292f] shadow-sm" {...props} />,
+    h1: ({node, ...props}: any) => <h1 className="font-semibold text-lg text-[#24292f] mt-8 mb-4 px-2" {...props} />,
+    h2: ({node, ...props}: any) => <h2 className="font-semibold text-[16px] text-[#24292f] mt-6 mb-3 px-2" {...props} />,
+    h3: ({node, ...props}: any) => <h3 className="font-medium text-[15px] text-[#24292f] mt-5 mb-3 px-2" {...props} />,
+    ul: ({node, ...props}: any) => <ul className="list-disc pl-6 mb-4 space-y-2 px-2 text-[#24292f] text-[14px]" {...props} />,
+    ol: ({node, ...props}: any) => <ol className="list-decimal pl-6 mb-4 space-y-2 px-2 text-[#24292f] text-[14px]" {...props} />,
+    li: ({node, ...props}: any) => <li className="leading-[1.6]" {...props} />,
+    strong: ({node, ...props}: any) => <strong className="font-semibold text-[#24292f]" {...props} />,
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-white text-[#24292f]" style={baseFontFamily}>
-      <header className="flex items-center justify-between px-4 py-3 border-b border-[#d0d7de] bg-[#f6f8fa]">
+    <div className="flex flex-col h-screen bg-[#f6f8fa] text-[#24292f]" style={baseFontFamily}>
+      <header className="flex items-center justify-between px-6 py-3 border-b border-[#d0d7de] bg-white z-10">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-            className="p-1 text-[#57606a] hover:text-[#24292f] rounded-xl hover:bg-[#ebecf0] transition-colors"
+            className="p-1.5 text-[#57606a] hover:text-[#24292f] rounded-lg hover:bg-[#f3f4f6] transition-colors"
             aria-label="Toggle sidebar"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -342,7 +353,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           
           <div className="flex items-center gap-2 font-semibold text-[16px]">
             <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="6" fill="#24292f"/>
+              <rect width="28" height="28" rx="8" fill="#24292f"/>
               <path d="M8 20L14 8L20 20M10.5 15.5H17.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             <span>LearnOS</span>
@@ -350,7 +361,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
           {activeDocument && (
             <div className="hidden md:flex items-center gap-2 text-sm text-[#57606a] ml-4 before:content-['/'] before:mr-2 before:text-[#d0d7de]">
-              <span className="truncate max-w-[300px]" title={activeDocument.title}>
+              <span className="truncate max-w-[300px] font-medium" title={activeDocument.title}>
                 {activeDocument.title}
               </span>
             </div>
@@ -359,14 +370,14 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
-            <div className="w-6 h-6 rounded-full bg-[#d0d7de] text-[#24292f] flex items-center justify-center font-medium text-xs">
+            <div className="w-7 h-7 rounded-full bg-[#d0d7de] text-[#24292f] flex items-center justify-center font-medium text-xs">
               {initialLetter}
             </div>
             <span className="hidden sm:inline font-medium text-[#24292f]">{currentUser?.username || '...'}</span>
           </div>
           <button 
             onClick={onLogout}
-            className="px-3 py-1 text-sm font-medium text-[#24292f] bg-[#f6f8fa] border border-[#d0d7de] rounded-xl hover:bg-[#f3f4f6] transition-colors shadow-sm"
+            className="px-3 py-1.5 text-sm font-medium text-[#24292f] bg-white border border-[#d0d7de] rounded-xl hover:bg-[#f6f8fa] transition-colors shadow-sm"
           >
             Sign out
           </button>
@@ -375,11 +386,11 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
       <div className="flex flex-1 overflow-hidden">
         {isSidebarVisible && (
-          <aside className="w-72 flex flex-col border-r border-[#d0d7de] bg-[#f6f8fa] shrink-0">
-            <div className="p-4 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
+          <aside className="w-[260px] flex flex-col border-r border-[#d0d7de] bg-[#f6f8fa] shrink-0">
+            <div className="p-5 flex flex-col gap-4">
+              <div className="flex items-center justify-between px-1">
                 <h2 className="text-sm font-semibold text-[#24292f]">Documents</h2>
-                <span className="px-2 py-0.5 text-xs font-medium bg-[#ddf4ff] text-[#0969da] rounded-full">
+                <span className="px-2 py-0.5 text-xs font-semibold bg-[#d0d7de] text-[#24292f] rounded-full">
                   {documents.length}
                 </span>
               </div>
@@ -396,33 +407,36 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 <button
                   onClick={() => fileUploadInputRef.current?.click()}
                   disabled={isUploadingDocument}
-                  className="w-full py-1.5 px-3 text-sm font-medium text-[#24292f] bg-white border border-[#d0d7de] rounded-xl hover:bg-[#f3f4f6] transition-colors shadow-sm disabled:opacity-50 flex justify-center items-center gap-2"
+                  className="w-full py-2 px-3 text-sm font-medium text-white bg-[#2da44e] border border-transparent rounded-xl hover:bg-[#2c974b] transition-colors shadow-sm disabled:opacity-50 flex justify-center items-center gap-2"
                 >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
                   {isUploadingDocument ? 'Uploading...' : 'Add document'}
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-3 pb-4">
+            <div className="flex-1 overflow-y-auto px-4 pb-4">
               {documents.length === 0 ? (
-                <div className="text-center py-8 px-4 text-sm text-[#57606a]">
-                  No documents found. Upload a file to get started.
+                <div className="text-center py-8 px-4 text-sm text-[#57606a] bg-white border border-[#d0d7de] rounded-xl border-dashed">
+                  No documents found.
                 </div>
               ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {documents.map(doc => {
                     const isActive = doc.id === activeDocumentId;
                     return (
                       <li key={doc.id}>
                         <div
                           onClick={() => handleDocumentSelection(doc.id)}
-                          className={`group flex items-center justify-between p-2 rounded-xl cursor-pointer text-sm transition-colors ${
-                            isActive ? 'bg-[#ddf4ff] text-[#0969da]' : 'hover:bg-[#ebecf0] text-[#24292f]'
+                          className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-sm transition-all ${
+                            isActive ? 'bg-white border border-[#d0d7de] shadow-sm text-[#24292f] font-medium' : 'hover:bg-[#ebecf0] border border-transparent text-[#57606a]'
                           }`}
                         >
                           <div className="flex items-center gap-2 overflow-hidden">
-                            <span className={`shrink-0 px-1.5 py-0.5 text-[10px] font-medium uppercase rounded border ${
-                              isActive ? 'border-[#54aeff] text-[#0969da]' : 'border-[#d0d7de] text-[#57606a]'
+                            <span className={`shrink-0 px-1.5 py-0.5 text-[10px] font-semibold uppercase rounded-md border ${
+                              isActive ? 'border-[#d0d7de] bg-[#f6f8fa] text-[#24292f]' : 'border-[#d0d7de] bg-white text-[#57606a]'
                             }`}>
                               {doc.fileType}
                             </span>
@@ -430,9 +444,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                           </div>
                           <button
                             onClick={(e) => handleDocumentDeletion(doc.id, e)}
-                            className={`shrink-0 p-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity ${
-                              isActive ? 'hover:bg-[#b6e3ff]' : 'hover:bg-[#d0d7de]'
-                            }`}
+                            className={`shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#d0d7de]`}
                             aria-label="Delete document"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -447,26 +459,26 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               )}
             </div>
 
-            <div className="p-4 border-t border-[#d0d7de]">
-              <h2 className="text-xs font-semibold text-[#57606a] uppercase tracking-wider mb-3">
+            <div className="p-5 border-t border-[#d0d7de] bg-[#f6f8fa]">
+              <h2 className="text-xs font-semibold text-[#57606a] uppercase tracking-wider mb-4 px-1">
                 Learning Stats
               </h2>
-              <ul className="space-y-2 text-sm">
-                <li className="flex justify-between">
+              <ul className="space-y-3 text-[14px] px-1">
+                <li className="flex justify-between items-center">
                   <span className="text-[#57606a]">Documents</span>
-                  <span className="font-medium text-[#24292f]">{learningProgress.totalDocuments}</span>
+                  <span className="font-semibold text-[#24292f] bg-[#e1e4e8] px-2 py-0.5 rounded-full text-xs">{learningProgress.totalDocuments}</span>
                 </li>
-                <li className="flex justify-between">
+                <li className="flex justify-between items-center">
                   <span className="text-[#57606a]">Conversations</span>
-                  <span className="font-medium text-[#24292f]">{learningProgress.totalChats}</span>
+                  <span className="font-semibold text-[#24292f] bg-[#e1e4e8] px-2 py-0.5 rounded-full text-xs">{learningProgress.totalChats}</span>
                 </li>
-                <li className="flex justify-between">
-                  <span className="text-[#57606a]">Quizzes Taken</span>
-                  <span className="font-medium text-[#24292f]">{learningProgress.totalQuizzes}</span>
+                <li className="flex justify-between items-center">
+                  <span className="text-[#57606a]">Quizzes</span>
+                  <span className="font-semibold text-[#24292f] bg-[#e1e4e8] px-2 py-0.5 rounded-full text-xs">{learningProgress.totalQuizzes}</span>
                 </li>
-                <li className="flex justify-between">
+                <li className="flex justify-between items-center">
                   <span className="text-[#57606a]">Accuracy</span>
-                  <span className="font-medium text-[#24292f]">{learningProgress.accuracy}%</span>
+                  <span className="font-semibold text-[#2da44e] bg-[#dcffe4] px-2 py-0.5 rounded-full text-xs">{learningProgress.accuracy}%</span>
                 </li>
               </ul>
             </div>
@@ -477,115 +489,121 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           <div className="flex items-center justify-between px-8 py-5 border-b border-[#d0d7de] bg-white">
             <div>
               <h1 className="text-lg font-semibold text-[#24292f]">Assistant</h1>
-              <p className="text-sm text-[#57606a] mt-0.5">
+              <p className="text-sm text-[#57606a] mt-1">
                 {activeDocument ? `Analyzing: ${activeDocument.title}` : 'Select a document to begin'}
               </p>
             </div>
             {isAssistantTyping && (
-              <span className="text-xs font-medium text-[#57606a] flex items-center gap-2">
+              <span className="text-xs font-medium text-[#57606a] flex items-center gap-2 bg-[#f6f8fa] px-3 py-1.5 rounded-full border border-[#d0d7de]">
+                <span className="w-2 h-2 bg-[#2da44e] rounded-full animate-pulse"></span>
                 Processing...
               </span>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto px-8 py-8 flex flex-col items-center">
+            <div className="w-full max-w-[900px] space-y-8 leading-[1.6]">
             {chatMessages.length === 0 && (
-              <div className="max-w-2xl mx-auto mt-12 p-8 border border-[#d0d7de] rounded-xl bg-[#f6f8fa] text-center">
-                <div className="w-12 h-12 mx-auto mb-4 bg-[#24292f] text-white rounded-lg flex items-center justify-center">
+              <div className="mx-auto mt-12 p-10 border border-[#d0d7de] rounded-2xl bg-white text-center shadow-sm max-w-2xl">
+                <div className="w-14 h-14 mx-auto mb-5 bg-[#f6f8fa] border border-[#d0d7de] text-[#24292f] rounded-2xl flex items-center justify-center">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-[#24292f] mb-2">Welcome, {displayName}</h2>
-                <p className="text-[#57606a] leading-relaxed">
+                <h2 className="text-xl font-semibold text-[#24292f] mb-3">Welcome, {displayName}</h2>
+                <p className="text-[#57606a] text-[15px] max-w-md mx-auto">
                   {activeDocument
-                    ? `Ask any questions about "${activeDocument.title}". The assistant will analyze the content and provide detailed answers.`
+                    ? `Ask any questions about "${activeDocument.title}". The AI will analyze the content and provide detailed answers.`
                     : 'Upload a document from the sidebar to start your learning session.'}
                 </p>
               </div>
             )}
 
             {chatMessages.map((msg, index) => (
-              <div key={index} className={`flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                  msg.role === 'assistant' ? 'bg-[#24292f] text-white rounded-xl' : 'bg-[#d0d7de] text-[#24292f]'
+              <div key={index} className={`flex gap-6 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shadow-sm ${
+                  msg.role === 'assistant' ? 'bg-[#2da44e] text-white' : 'bg-[#24292f] text-white'
                 }`}>
                   {msg.role === 'assistant' ? 'AI' : initialLetter}
                 </div>
-                <div className={`flex-1 text-[15px] leading-relaxed px-4 py-3 rounded-xl border ${
-                  msg.role === 'assistant' 
-                    ? 'bg-white border-[#d0d7de] text-[#24292f]' 
-                    : 'bg-[#f6f8fa] border-[#d0d7de] text-[#24292f]'
-                }`}>
+                <div className={`flex-1 ${msg.role === 'user' ? 'max-w-[75%]' : 'w-full'}`}>
                   {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm max-w-none prose-headings:font-semibold prose-a:text-[#0969da]">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <div className="w-full">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        components={MarkdownComponents}
+                      >
                         {msg.content}
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <div className="bg-white border border-[#d0d7de] rounded-xl p-5 text-[14px] leading-[1.6] text-[#24292f] shadow-sm whitespace-pre-wrap">
+                      {msg.content}
+                    </div>
                   )}
                 </div>
               </div>
             ))}
 
             {isAssistantTyping && (
-              <div className="flex gap-4 max-w-4xl mx-auto">
-                <div className="shrink-0 w-8 h-8 rounded-xl bg-[#24292f] text-white flex items-center justify-center text-xs font-medium">
+              <div className="flex gap-6">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-[#2da44e] shadow-sm text-white flex items-center justify-center text-xs font-semibold">
                   AI
                 </div>
-                <div className="px-4 py-3 border border-[#d0d7de] rounded-xl bg-white flex items-center">
-                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse mr-1" />
-                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse mr-1" style={{ animationDelay: '0.2s' }} />
-                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                <div className="px-5 py-4 border border-[#d0d7de] rounded-xl bg-white shadow-sm flex items-center gap-1.5 h-[54px]">
+                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-bounce" />
+                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
                 </div>
               </div>
             )}
             <div ref={chatScrollAnchorRef} />
+            </div>
           </div>
 
-          <div className="px-8 py-6 bg-[#f6f8fa] border-t border-[#d0d7de] flex flex-col items-center">
-            <div className="max-w-4xl mx-auto relative flex items-end gap-2">
-              <textarea
-                ref={chatTextareaRef}
-                value={chatInputValue}
-                onChange={handleChatInputChange}
-                onKeyDown={handleChatInputKeyDown}
-                placeholder={activeDocument ? `Ask a question about "${activeDocument.title}"...` : 'Type a message...'}
-                rows={1}
-                disabled={!activeDocument}
-                className="flex-1 max-h-32 p-3 pr-12 text-[15px] bg-[#f6f8fa] border border-[#d0d7de] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-transparent resize-none disabled:opacity-50 disabled:bg-[#f6f8fa]"
-              />
-              <button
-                onClick={submitChatMessage}
-                disabled={isAssistantTyping || !chatInputValue.trim() || !activeDocument}
-                className="absolute right-2 bottom-2 p-2 text-white bg-[#2da44e] rounded-xl hover:bg-[#2c974b] disabled:opacity-50 disabled:hover:bg-[#2da44e] transition-colors"
-                aria-label="Send message"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M1.5 1.5l13 6.5-13 6.5v-4l9-2.5-9-2.5v-4z" />
-                </svg>
-              </button>
-            </div>
-            <div className="text-center mt-2 text-xs text-[#57606a]">
-              AI assistant may provide inaccurate information. Verify before trusting.
+          <div className="px-8 py-6 bg-white border-t border-[#d0d7de] flex flex-col items-center">
+            <div className="w-full max-w-[900px] relative flex flex-col gap-2">
+              <div className="relative flex items-end w-full">
+                <textarea
+                  ref={chatTextareaRef}
+                  value={chatInputValue}
+                  onChange={handleChatInputChange}
+                  onKeyDown={handleChatInputKeyDown}
+                  placeholder={activeDocument ? `Ask a question about "${activeDocument.title}"...` : 'Type a message...'}
+                  rows={1}
+                  disabled={!activeDocument}
+                  className="w-full max-h-32 p-4 pr-14 text-[15px] bg-[#f6f8fa] border border-[#d0d7de] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-transparent resize-none disabled:opacity-50 transition-all shadow-sm"
+                />
+                <button
+                  onClick={submitChatMessage}
+                  disabled={isAssistantTyping || !chatInputValue.trim() || !activeDocument}
+                  className="absolute right-2 bottom-2 p-2.5 text-white bg-[#2da44e] rounded-xl hover:bg-[#2c974b] disabled:opacity-50 disabled:hover:bg-[#2da44e] transition-colors shadow-sm"
+                  aria-label="Send message"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M1.5 1.5l13 6.5-13 6.5v-4l9-2.5-9-2.5v-4z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="text-center text-[12px] text-[#57606a]">
+                AI assistant may provide inaccurate information. Verify before trusting.
+              </div>
             </div>
           </div>
         </main>
 
-        <aside className="w-80 border-l border-[#d0d7de] bg-white flex flex-col shrink-0">
-          <div className="px-4 py-3 border-b border-[#d0d7de] bg-[#f6f8fa]">
+        <aside className="w-[280px] border-l border-[#d0d7de] bg-[#f6f8fa] flex flex-col shrink-0">
+          <div className="px-5 py-4 border-b border-[#d0d7de] bg-white">
             <h2 className="text-sm font-semibold text-[#24292f]">Learning Tools</h2>
           </div>
 
-          <div className="p-4 space-y-3">
+          <div className="p-5 space-y-4">
             <button
               onClick={requestDocumentSummary}
               disabled={!activeDocumentId || isToolProcessing}
-              className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-[#24292f] border border-[#d0d7de] rounded-xl hover:bg-[#f6f8fa] disabled:opacity-50 transition-colors shadow-sm"
+              className="w-full flex items-center gap-3 p-3 text-left text-[14px] font-medium text-[#24292f] bg-white border border-[#d0d7de] rounded-xl hover:bg-[#f9fafb] disabled:opacity-50 transition-colors shadow-sm"
             >
-              <span className="text-[#0969da]">
+              <span className="text-[#0969da] bg-[#ddf4ff] p-1.5 rounded-lg">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 6h16M4 12h16M4 18h7" />
                 </svg>
@@ -595,41 +613,44 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             <button
               onClick={requestQuizGeneration}
               disabled={!activeDocumentId || isToolProcessing}
-              className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-[#24292f] border border-[#d0d7de] rounded-xl hover:bg-[#f6f8fa] disabled:opacity-50 transition-colors shadow-sm"
+              className="w-full flex items-center gap-3 p-3 text-left text-[14px] font-medium text-[#24292f] bg-white border border-[#d0d7de] rounded-xl hover:bg-[#f9fafb] disabled:opacity-50 transition-colors shadow-sm"
             >
-              <span className="text-[#2da44e]">
+              <span className="text-[#2da44e] bg-[#dcffe4] p-1.5 rounded-lg">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
               </span>
-              Generate Practice Quiz
+              Practice Quiz
             </button>
           </div>
 
           {activeTool && (
-            <div className="flex-1 flex flex-col border-t border-[#d0d7de] overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 bg-[#f6f8fa] border-b border-[#d0d7de]">
+            <div className="flex-1 flex flex-col border-t border-[#d0d7de] overflow-hidden bg-[#f6f8fa]">
+              <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-[#d0d7de]">
                 <h3 className="text-sm font-semibold text-[#24292f]">
-                  {activeTool === 'summary' ? 'Document Summary' : 'Practice Quiz'}
+                  {activeTool === 'summary' ? 'Summary' : 'Quiz'}
                 </h3>
                 <button 
                   onClick={() => setActiveTool(null)}
-                  className="p-1 text-[#57606a] hover:text-[#24292f] rounded-xl hover:bg-[#ebecf0]"
+                  className="p-1.5 text-[#57606a] hover:text-[#24292f] rounded-lg hover:bg-[#f3f4f6]"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 text-[14px]">
+              <div className="flex-1 overflow-y-auto p-5">
                 {isToolProcessing ? (
-                  <div className="flex items-center gap-2 text-[#57606a] text-sm">
-                    <span className="w-3 h-3 border-2 border-[#d0d7de] border-t-[#24292f] rounded-full animate-spin" />
-                    Processing request...
+                  <div className="flex items-center gap-3 text-[#57606a] text-[14px] font-medium bg-white p-4 rounded-xl border border-[#d0d7de] shadow-sm">
+                    <span className="w-4 h-4 border-2 border-[#d0d7de] border-t-[#2da44e] rounded-full animate-spin" />
+                    Processing...
                   </div>
                 ) : (
-                  <div className="prose prose-sm max-w-none text-[#24292f]">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <div className="w-full">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={MarkdownComponents}
+                    >
                       {toolResultContent}
                     </ReactMarkdown>
                   </div>
