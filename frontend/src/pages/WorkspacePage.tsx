@@ -7,7 +7,7 @@ interface User {
   id: number
   email: string
   username: string
-  full_name: string
+  fullName: string
 }
 
 interface Document {
@@ -357,7 +357,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             {chatMessages.length === 0 && (
               <div className="card welcome-card">
                 <div className="welcome-icon">◈</div>
-                <h3 className="welcome-title">Xin chào, {currentUser?.full_name || currentUser?.username}</h3>
+                <h3 className="welcome-title">Xin chào, {currentUser?.fullName || currentUser?.username}</h3>
                 <p className="welcome-text">
                   {activeDoc
                     ? `Bạn có thể đặt bất kỳ câu hỏi nào liên quan đến nội dung tài liệu "${activeDoc.title}". Tôi sẽ tìm kiếm và trả lời.`
