@@ -58,7 +58,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [learningProgress, setLearningProgress] = useState({ totalDocuments: 0, totalChats: 0, totalQuizzes: 0, accuracy: 0 })
   const [isSidebarVisible, setIsSidebarVisible] = useState(false)
 
-  const chatEndRef = useRef<HTMLDivElement>(null)
+  const chatScrollAnchorRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -71,7 +71,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   }, [])
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    chatScrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages])
 
   async function loadInitialData() {
@@ -398,7 +398,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 </div>
               </div>
             )}
-            <div ref={chatEndRef} />
+            <div ref={chatScrollAnchorRef} />
           </div>
 
           <div className="chat-input-bar">
