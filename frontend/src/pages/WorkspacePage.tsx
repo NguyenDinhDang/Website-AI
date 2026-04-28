@@ -51,7 +51,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInputValue, setChatInputValue] = useState('')
   const [isAssistantTyping, setIsAssistantTyping] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [activeToolPanel, setActiveToolPanel] = useState<'summary' | 'quiz' | null>(null)
   const [toolContent, setToolContent] = useState('')
   const [isToolLoading, setIsToolLoading] = useState(false)
@@ -116,7 +116,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setIsUploading(true)
+    setIsUploadingDocument(true)
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -134,7 +134,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Upload thất bại')
     } finally {
-      setIsUploading(false)
+      setIsUploadingDocument(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
@@ -278,11 +278,11 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
+              disabled={isUploadingDocument}
               className="btn btn-secondary"
               style={{ width: '100%', justifyContent: 'center' }}
             >
-              {isUploading ? (
+              {isUploadingDocument ? (
                 <><span className="spinner" style={{ color: 'var(--text-muted)' }} /> Đang xử lý…</>
               ) : (
                 <>+ Thêm tài liệu mới</>
