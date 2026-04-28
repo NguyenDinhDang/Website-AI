@@ -47,7 +47,7 @@ async function fetchFromApi(path: string, options: RequestInit = {}) {
 export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [documents, setDocuments] = useState<Document[]>([])
-  const [activeDocId, setActiveDocId] = useState<number | null>(null)
+  const [activeDocumentId, setActiveDocumentId] = useState<number | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
@@ -85,7 +85,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       setDocuments(docs.items || [])
       setProgress(prog)
       if (docs.items?.length > 0) {
-        setActiveDocId(docs.items[0].id)
+        setActiveDocumentId(docs.items[0].id)
         loadChatHistory(docs.items[0].id)
       }
     } catch (err) {
@@ -106,7 +106,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   }
 
   async function handleSelectDoc(docId: number) {
-    setActiveDocId(docId)
+    setActiveDocumentId(docId)
     setActiveToolPanel(null)
     setToolContent('')
     if (window.innerWidth < 768) setSidebarOpen(false); // auto close on mobile
@@ -128,7 +128,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       const doc = await response.json()
       if (!response.ok) throw new Error(doc.detail)
       setDocuments(prev => [doc, ...prev])
-      setActiveDocId(doc.id)
+      setActiveDocumentId(doc.id)
       setChatMessages([])
       setProgress(prev => ({ ...prev, total_documents: prev.total_documents + 1 }))
     } catch (err) {
@@ -145,9 +145,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     try {
       await fetchFromApi(`/documents/${docId}`, { method: 'DELETE' })
       setDocuments(prev => prev.filter(d => d.id !== docId))
-      if (activeDocId === docId) {
+      if (activeDocumentId === docId) {
         const remaining = documents.filter(d => d.id !== docId)
-        setActiveDocId(remaining[0]?.id ?? null)
+        setActiveDocumentId(remaining[0]?.id ?? null)
         setChatMessages([])
       }
     } catch (err) {
@@ -167,7 +167,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
     try {
       const body: { message: string; document_id?: number } = { message }
-      if (activeDocId) body.document_id = activeDocId
+      if (activeDocumentId) body.document_id = activeDocumentId
       const data = await fetchFromApi('/ai/chat', { method: 'POST', body: JSON.stringify(body) })
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.answer }])
       setProgress(prev => ({ ...prev, total_chats: prev.total_chats + 1 }))
@@ -179,24 +179,24 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   }
 
   async function handleSummarize() {
-    if (!activeDocId) return alert('Chọn tài liệu trước')
+    if (!activeDocumentId) return alert('Chọn tài liệu trước')
     setActiveToolPanel('summary')
     setIsToolLoading(true)
     setToolContent('')
     try {
-      const data = await fetchFromApi('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocId }) })
+      const data = await fetchFromApi('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentId }) })
       setToolContent(data.summary)
     } catch { setToolContent('Không thể tạo tóm tắt. Thử lại sau.') }
     finally { setIsToolLoading(false) }
   }
 
   async function handleGenerateQuiz() {
-    if (!activeDocId) return alert('Chọn tài liệu trước')
+    if (!activeDocumentId) return alert('Chọn tài liệu trước')
     setActiveToolPanel('quiz')
     setIsToolLoading(true)
     setToolContent('')
     try {
-      const data = await fetchFromApi('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocId, num_questions: 5 }) })
+      const data = await fetchFromApi('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentId, num_questions: 5 }) })
       const formatted = data.questions.map((q: { question: string; options: string[]; explanation: string }, i: number) =>
         `${i + 1}. ${q.question}\n${q.options.map((opt: string, j: number) => `   ${String.fromCharCode(65 + j)}. ${opt}`).join('\n')}\n→ ${q.explanation}`
       ).join('\n\n')
@@ -216,7 +216,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
   }
 
-  const activeDoc = documents.find(d => d.id === activeDocId)
+  const activeDoc = documents.find(d => d.id === activeDocumentId)
 
   return (
     <div className="workspace-layout">
@@ -302,9 +302,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 <div
                   key={doc.id}
                   onClick={() => handleSelectDoc(doc.id)}
-                  className={`doc-item ${doc.id === activeDocId ? 'active' : ''}`}
+                  className={`doc-item ${doc.id === activeDocumentId ? 'active' : ''}`}
                 >
-                  <span className={`badge ${doc.id === activeDocId ? 'badge-blue' : 'badge-gray'}`}>
+                  <span className={`badge ${doc.id === activeDocumentId ? 'badge-blue' : 'badge-gray'}`}>
                     {doc.fileType.toUpperCase()}
                   </span>
                   <span className="doc-name">{doc.title}</span>
@@ -435,7 +435,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           <div className="tool-actions">
             <button
               onClick={handleSummarize}
-              disabled={!activeDocId || isToolLoading}
+              disabled={!activeDocumentId || isToolLoading}
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
             >
@@ -443,7 +443,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             </button>
             <button
               onClick={handleGenerateQuiz}
-              disabled={!activeDocId || isToolLoading}
+              disabled={!activeDocumentId || isToolLoading}
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
             >
