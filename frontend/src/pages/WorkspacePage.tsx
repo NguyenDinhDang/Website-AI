@@ -50,7 +50,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
   const [activeDocumentumentumentId, setActiveDocumentId] = useState<number | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInputValue, setChatInputValue] = useState('')
-  const [isAiLoading, setIsAiLoading] = useState(false)
+  const [isAssistantTyping, setIsAssistantTyping] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [activeToolPanel, setActiveToolPanel] = useState<'summary' | 'quiz' | null>(null)
   const [toolContent, setToolContent] = useState('')
@@ -157,13 +157,13 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
   async function handleSendMessage() {
     const message = chatInputValue.trim()
-    if (!message || isAiLoading) return
+    if (!message || isAssistantTyping) return
     setChatInputValue('')
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
 
     const userMessage: ChatMessage = { role: 'user', content: message }
     setChatMessages(prev => [...prev, userMessage])
-    setIsAiLoading(true)
+    setIsAssistantTyping(true)
 
     try {
       const body: { message: string; document_id?: number } = { message }
@@ -174,7 +174,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     } catch (err) {
       setChatMessages(prev => [...prev, { role: 'assistant', content: '⚠ Có lỗi xảy ra. Vui lòng thử lại.' }])
     } finally {
-      setIsAiLoading(false)
+      setIsAssistantTyping(false)
     }
   }
 
@@ -346,7 +346,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 {activeDocumentument ? `Đang tư vấn dựa trên: ${activeDocumentument.title}` : 'Vui lòng chọn tài liệu để bắt đầu'}
               </p>
             </div>
-            {isAiLoading && (
+            {isAssistantTyping && (
               <div className="badge badge-blue" style={{ fontSize: '11px', padding: 'var(--space-1) var(--space-3)', borderRadius: 'var(--radius-full)' }}>
                 <span className="spinner" style={{ width: 10, height: 10, marginRight: 6 }} /> Đang phân tích...
               </div>
@@ -390,7 +390,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               </div>
             ))}
 
-            {isAiLoading && (
+            {isAssistantTyping && (
               <div className="msg-row assistant">
                 <div className="avatar" style={{ borderRadius: 'var(--radius-lg)' }}>AI</div>
                 <div className="bubble ai">
@@ -414,7 +414,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             />
             <button
               onClick={handleSendMessage}
-              disabled={isAiLoading || !chatInputValue.trim() || !activeDocumentument}
+              disabled={isAssistantTyping || !chatInputValue.trim() || !activeDocumentument}
               className="btn btn-primary"
               style={{ width: 44, height: 44, padding: 0, borderRadius: 'var(--radius-xl)' }}
               aria-label="Send message"
