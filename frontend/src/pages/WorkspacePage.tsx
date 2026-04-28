@@ -113,7 +113,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     await loadChatHistory(docId)
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setIsUploadingDocument(true)
@@ -272,7 +272,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               ref={fileUploadInputRef}
               type="file"
               accept=".pdf,.txt,.md,.docx"
-              onChange={handleUpload}
+              onChange={handleFileUpload}
               style={{ display: 'none' }}
               aria-label="Upload document"
             />
