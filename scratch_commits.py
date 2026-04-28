@@ -1,5 +1,53 @@
-import { useState, useRef, useEffect } from 'react';
-import type { KeyboardEvent, ChangeEvent, MouseEvent } from 'react';
+import os
+
+def run_git(msg):
+    os.system(f'git add frontend/src/pages/WorkspacePage.tsx')
+    os.system(f'git commit -m "{msg}"')
+
+filepath = r"F:\Workspace\WebsiteAI\frontend\src\pages\WorkspacePage.tsx"
+
+with open(filepath, "r", encoding="utf-8") as f:
+    content = f.read()
+
+replacements = [
+    (("interface UserResponse", "interface User"), ("UserResponse | null", "User | null"), "refactor: rename UserResponse to User"),
+    (("full_name: string", "fullName: string"), ("currentUser?.full_name", "currentUser?.fullName"), "refactor: camelCase user properties"),
+    (("file_type: string", "fileType: string"), ("file_size: number", "fileSize: number"), ("doc.file_type", "doc.fileType"), "refactor: camelCase document properties"),
+    (("function getToken() { return", "const getAccessToken = () =>"), ("getToken()", "getAccessToken()"), "refactor: rename getToken to getAccessToken"),
+    (("apiFetch", "fetchFromApi"), ("apiFetch", "fetchFromApi"), "refactor: rename apiFetch to fetchFromApi"),
+    (("activeDocId", "activeDocumentId"), ("setActiveDocId", "setActiveDocumentId"), "refactor: rename activeDocId for clarity"),
+    (("activeDoc", "activeDocument"), ("activeDoc", "activeDocument"), "refactor: rename activeDoc to activeDocument"),
+    (("chatInput", "chatInputValue"), ("setChatInput", "setChatInputValue"), "refactor: rename chatInput to chatInputValue"),
+    (("isAiLoading", "isAssistantTyping"), ("setIsAiLoading", "setIsAssistantTyping"), "refactor: rename loading state to isAssistantTyping"),
+    (("isUploading", "isUploadingDocument"), ("setIsUploading", "setIsUploadingDocument"), "refactor: clarify uploading state"),
+    (("activeToolPanel", "activeTool"), ("setActiveToolPanel", "setActiveTool"), "refactor: simplify tool panel state naming"),
+    (("toolContent", "toolResultContent"), ("setToolContent", "setToolResultContent"), "refactor: rename toolContent to toolResultContent"),
+    (("isToolLoading", "isToolProcessing"), ("setIsToolLoading", "setIsToolProcessing"), "refactor: rename tool loading state"),
+    (("progress", "learningProgress"), ("setProgress", "setLearningProgress"), "refactor: rename progress state to learningProgress"),
+    (("total_documents", "totalDocuments"), ("total_chats", "totalChats"), ("total_quizzes", "totalQuizzes"), "refactor: camelCase learning stats"),
+    (("sidebarOpen", "isSidebarVisible"), ("setSidebarOpen", "setIsSidebarVisible"), "refactor: rename sidebar visibility state"),
+    (("chatEndRef", "chatScrollAnchorRef"), ("chatEndRef", "chatScrollAnchorRef"), "refactor: rename chat scroll ref"),
+    (("fileInputRef", "fileUploadInputRef"), ("fileInputRef", "fileUploadInputRef"), "refactor: rename file input ref"),
+    (("textareaRef", "chatTextareaRef"), ("textareaRef", "chatTextareaRef"), "refactor: rename chat textarea ref"),
+    (("handleSelectDoc", "handleDocumentSelection"), ("handleSelectDoc", "handleDocumentSelection"), "refactor: rename document selection handler"),
+    (("handleUpload", "handleFileUpload"), ("handleUpload", "handleFileUpload"), "refactor: rename upload handler"),
+    (("handleDeleteDoc", "handleDocumentDeletion"), ("handleDeleteDoc", "handleDocumentDeletion"), "refactor: rename document deletion handler"),
+    (("handleSendMessage", "submitChatMessage"), ("handleSendMessage", "submitChatMessage"), "refactor: rename message submission handler"),
+    (("handleSummarize", "requestDocumentSummary"), ("handleSummarize", "requestDocumentSummary"), "refactor: rename summarize handler"),
+    (("handleGenerateQuiz", "requestQuizGeneration"), ("handleGenerateQuiz", "requestQuizGeneration"), "refactor: rename quiz generation handler")
+]
+
+for step in replacements:
+    msg = step[-1]
+    pairs = step[:-1]
+    for old, new in pairs:
+        content = content.replace(old, new)
+    
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(content)
+    run_git(msg)
+
+final_code = """import React, { useState, useRef, useEffect, KeyboardEvent, ChangeEvent, MouseEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -287,9 +335,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       const formattedQuizContent = quizResponse.questions.map((quizItem: { question: string; options: string[]; explanation: string }, index: number) => {
         const optionsList = quizItem.options.map((optionText: string, optionIndex: number) => 
           `   ${String.fromCharCode(65 + optionIndex)}. ${optionText}`
-        ).join('\n');
-        return `${index + 1}. ${quizItem.question}\n${optionsList}\n\n**Explanation**: ${quizItem.explanation}`;
-      }).join('\n\n---\n\n');
+        ).join('\\n');
+        return `${index + 1}. ${quizItem.question}\\n${optionsList}\\n\\n**Explanation**: ${quizItem.explanation}`;
+      }).join('\\n\\n---\\n\\n');
       
       setToolResultContent(formattedQuizContent);
       setLearningProgress(previousProgress => ({ 
@@ -641,4 +689,9 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
       </div>
     </div>
   );
-}
+}"""
+
+with open(filepath, "w", encoding="utf-8") as f:
+    f.write(final_code)
+
+run_git("style: apply GitHub system font stack and Tailwind layout")
