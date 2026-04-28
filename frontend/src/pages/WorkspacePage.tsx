@@ -14,8 +14,8 @@ interface Document {
   id: number
   title: string
   filename: string
-  file_type: string
-  file_size: number
+  fileType: string
+  fileSize: number
 }
 
 interface ChatMessage {
@@ -305,7 +305,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                   className={`doc-item ${doc.id === activeDocId ? 'active' : ''}`}
                 >
                   <span className={`badge ${doc.id === activeDocId ? 'badge-blue' : 'badge-gray'}`}>
-                    {doc.file_type.toUpperCase()}
+                    {doc.fileType.toUpperCase()}
                   </span>
                   <span className="doc-name">{doc.title}</span>
                   <button
