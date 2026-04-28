@@ -178,7 +178,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     }
   }
 
-  async function handleSummarize() {
+  async function requestDocumentSummary() {
     if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
     setActiveTool('summary')
     setIsToolProcessing(true)
@@ -434,7 +434,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
           <div className="tool-actions">
             <button
-              onClick={handleSummarize}
+              onClick={requestDocumentSummary}
               disabled={!activeDocumentumentumentId || isToolProcessing}
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
