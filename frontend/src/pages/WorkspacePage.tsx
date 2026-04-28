@@ -1,472 +1,633 @@
-import { useState, useRef, useEffect } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import '../styles/WorkspacePage.css'
+import React, { useState, useRef, useEffect, KeyboardEvent, ChangeEvent, MouseEvent } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface User {
-  id: number
-  email: string
-  username: string
-  fullName: string
+  id: number;
+  email: string;
+  username: string;
+  fullName: string;
 }
 
 interface Document {
-  id: number
-  title: string
-  filename: string
-  fileType: string
-  fileSize: number
+  id: number;
+  title: string;
+  filename: string;
+  fileType: string;
+  fileSize: number;
 }
 
 interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 interface WorkspaceProps {
-  onLogout: () => void
+  onLogout: () => void;
 }
 
-const getAccessToken = () => localStorage.getItem('access_token') || '' }
+const getAccessToken = () => localStorage.getItem('access_token') || '';
 
-async function fetchFromApi(path: string, options: RequestInit = {}) {
-  const response = await fetch(`/api/v1${path}`, {
+async function fetchFromApi(endpoint: string, options: RequestInit = {}) {
+  const response = await fetch(`/api/v1${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${getAccessToken()}`,
       ...(options.headers || {}),
     },
-  })
-  if (response.status === 204) return null
-  const data = await response.json()
-  if (!response.ok) throw new Error(data.detail || 'Lỗi từ server')
-  return data
+  });
+  if (response.status === 204) return null;
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.detail || 'Server error occurred');
+  return payload;
 }
 
 export function WorkspacePage({ onLogout }: WorkspaceProps) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [documents, setDocuments] = useState<Document[]>([])
-  const [activeDocumentumentumentId, setActiveDocumentId] = useState<number | null>(null)
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [chatInputValue, setChatInputValue] = useState('')
-  const [isAssistantTyping, setIsAssistantTyping] = useState(false)
-  const [isUploadingDocument, setIsUploadingDocument] = useState(false)
-  const [activeTool, setActiveTool] = useState<'summary' | 'quiz' | null>(null)
-  const [toolResultContent, setToolResultContent] = useState('')
-  const [isToolProcessing, setIsToolProcessing] = useState(false)
-  const [learningProgress, setLearningProgress] = useState({ totalDocuments: 0, totalChats: 0, totalQuizzes: 0, accuracy: 0 })
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false)
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [activeDocumentId, setActiveDocumentId] = useState<number | null>(null);
+  
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInputValue, setChatInputValue] = useState('');
+  const [isAssistantTyping, setIsAssistantTyping] = useState(false);
+  
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false);
+  const [activeTool, setActiveTool] = useState<'summary' | 'quiz' | null>(null);
+  const [toolResultContent, setToolResultContent] = useState('');
+  const [isToolProcessing, setIsToolProcessing] = useState(false);
+  
+  const [learningProgress, setLearningProgress] = useState({ 
+    totalDocuments: 0, 
+    totalChats: 0, 
+    totalQuizzes: 0, 
+    accuracy: 0 
+  });
+  
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
-  const chatScrollAnchorRef = useRef<HTMLDivElement>(null)
-  const fileUploadInputRef = useRef<HTMLInputElement>(null)
-  const chatTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const chatScrollAnchorRef = useRef<HTMLDivElement>(null);
+  const fileUploadInputRef = useRef<HTMLInputElement>(null);
+  const chatTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Media query to default sidebar to open on desktop
-    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
-    if (isDesktop) setIsSidebarVisible(true);
-    
-    loadInitialData()
-  }, [])
+    const isDesktopView = window.matchMedia('(min-width: 768px)').matches;
+    if (isDesktopView) setIsSidebarVisible(true);
+    initializeWorkspace();
+  }, []);
 
   useEffect(() => {
-    chatScrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [chatMessages])
+    if (chatScrollAnchorRef.current) {
+      chatScrollAnchorRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages]);
 
-  async function loadInitialData() {
+  async function initializeWorkspace() {
     try {
-      const [user, docs, prog] = await Promise.all([
+      const [userResponse, documentsResponse, progressResponse] = await Promise.all([
         fetchFromApi('/auth/me'),
         fetchFromApi('/documents/'),
-        fetchFromApi('/learningProgress/'),
-      ])
-      setCurrentUser(user)
-      setDocuments(docs.items || [])
-      setLearningProgress(prog)
-      if (docs.items?.length > 0) {
-        setActiveDocumentId(docs.items[0].id)
-        loadChatHistory(docs.items[0].id)
+        fetchFromApi('/progress/'),
+      ]);
+      
+      setCurrentUser({
+        id: userResponse.id,
+        email: userResponse.email,
+        username: userResponse.username,
+        fullName: userResponse.full_name,
+      });
+      
+      const mappedDocuments = (documentsResponse.items || []).map((doc: any) => ({
+        id: doc.id,
+        title: doc.title,
+        filename: doc.filename,
+        fileType: doc.file_type,
+        fileSize: doc.file_size,
+      }));
+      setDocuments(mappedDocuments);
+      
+      setLearningProgress({
+        totalDocuments: progressResponse.total_documents,
+        totalChats: progressResponse.total_chats,
+        totalQuizzes: progressResponse.total_quizzes,
+        accuracy: progressResponse.accuracy,
+      });
+
+      if (mappedDocuments.length > 0) {
+        const initialDocumentId = mappedDocuments[0].id;
+        setActiveDocumentId(initialDocumentId);
+        await fetchChatHistory(initialDocumentId);
       }
-    } catch (err) {
-      console.error('Failed to load initial data', err)
-      // Throw to error boundary if needed, but for now just console error
+    } catch (error) {
+      console.error('Failed to initialize workspace data:', error);
     }
   }
 
-  async function loadChatHistory(docId: number | null) {
+  async function fetchChatHistory(documentId: number | null) {
     try {
-      const url = docId ? `/ai/chat/history?document_id=${docId}` : '/ai/chat/history'
-      const data = await fetchFromApi(url)
-      setChatMessages(data.items.map((item: { role: string; content: string }) => ({
-        role: item.role === 'user' ? 'user' : 'assistant',
-        content: item.content,
-      })))
-    } catch { setChatMessages([]) }
+      const endpoint = documentId ? `/ai/chat/history?document_id=${documentId}` : '/ai/chat/history';
+      const historyResponse = await fetchFromApi(endpoint);
+      const mappedMessages = historyResponse.items.map((messageItem: { role: string; content: string }) => ({
+        role: messageItem.role === 'user' ? 'user' : 'assistant',
+        content: messageItem.content,
+      }));
+      setChatMessages(mappedMessages);
+    } catch (error) {
+      setChatMessages([]);
+    }
   }
 
-  async function handleDocumentSelection(docId: number) {
-    setActiveDocumentId(docId)
-    setActiveTool(null)
-    setToolResultContent('')
-    if (window.innerWidth < 768) setIsSidebarVisible(false); // auto close on mobile
-    await loadChatHistory(docId)
+  async function handleDocumentSelection(documentId: number) {
+    setActiveDocumentId(documentId);
+    setActiveTool(null);
+    setToolResultContent('');
+    
+    if (window.innerWidth < 768) setIsSidebarVisible(false);
+    await fetchChatHistory(documentId);
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setIsUploadingDocument(true)
+  async function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+    
+    setIsUploadingDocument(true);
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const response = await fetch('/api/v1/documents/', {
+      const uploadPayload = new FormData();
+      uploadPayload.append('file', selectedFile);
+      
+      const uploadResponse = await fetch('/api/v1/documents/', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${getAccessToken()}` },
-        body: formData,
-      })
-      const doc = await response.json()
-      if (!response.ok) throw new Error(doc.detail)
-      setDocuments(prev => [doc, ...prev])
-      setActiveDocumentId(doc.id)
-      setChatMessages([])
-      setLearningProgress(prev => ({ ...prev, totalDocuments: prev.totalDocuments + 1 }))
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Upload thất bại')
+        body: uploadPayload,
+      });
+      
+      const responseData = await uploadResponse.json();
+      if (!uploadResponse.ok) throw new Error(responseData.detail || 'Upload failed');
+      
+      const newDocument: Document = {
+        id: responseData.id,
+        title: responseData.title,
+        filename: responseData.filename,
+        fileType: responseData.file_type,
+        fileSize: responseData.file_size,
+      };
+      
+      setDocuments(previousDocuments => [newDocument, ...previousDocuments]);
+      setActiveDocumentId(newDocument.id);
+      setChatMessages([]);
+      setLearningProgress(previousProgress => ({
+        ...previousProgress,
+        totalDocuments: previousProgress.totalDocuments + 1,
+      }));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'An error occurred during upload');
     } finally {
-      setIsUploadingDocument(false)
-      if (fileUploadInputRef.current) fileUploadInputRef.current.value = ''
+      setIsUploadingDocument(false);
+      if (fileUploadInputRef.current) {
+        fileUploadInputRef.current.value = '';
+      }
     }
   }
 
-  async function handleDocumentDeletion(docId: number, e: React.MouseEvent) {
-    e.stopPropagation()
-    if (!confirm('Xoá tài liệu này?')) return
+  async function handleDocumentDeletion(documentId: number, event: MouseEvent) {
+    event.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    
     try {
-      await fetchFromApi(`/documents/${docId}`, { method: 'DELETE' })
-      setDocuments(prev => prev.filter(d => d.id !== docId))
-      if (activeDocumentumentumentId === docId) {
-        const remaining = documents.filter(d => d.id !== docId)
-        setActiveDocumentId(remaining[0]?.id ?? null)
-        setChatMessages([])
+      await fetchFromApi(`/documents/${documentId}`, { method: 'DELETE' });
+      setDocuments(previousDocuments => previousDocuments.filter(doc => doc.id !== documentId));
+      
+      if (activeDocumentId === documentId) {
+        const remainingDocuments = documents.filter(doc => doc.id !== documentId);
+        const nextActiveId = remainingDocuments.length > 0 ? remainingDocuments[0].id : null;
+        setActiveDocumentId(nextActiveId);
+        setChatMessages([]);
       }
-    } catch (err) {
-      alert('Không thể xoá tài liệu')
+    } catch (error) {
+      alert('Failed to delete the document. Please try again.');
     }
   }
 
   async function submitChatMessage() {
-    const message = chatInputValue.trim()
-    if (!message || isAssistantTyping) return
-    setChatInputValue('')
-    if (chatTextareaRef.current) chatTextareaRef.current.style.height = 'auto'
+    const messageContent = chatInputValue.trim();
+    if (!messageContent || isAssistantTyping) return;
+    
+    setChatInputValue('');
+    if (chatTextareaRef.current) {
+      chatTextareaRef.current.style.height = 'auto';
+    }
 
-    const userMessage: ChatMessage = { role: 'user', content: message }
-    setChatMessages(prev => [...prev, userMessage])
-    setIsAssistantTyping(true)
+    const newUserMessage: ChatMessage = { role: 'user', content: messageContent };
+    setChatMessages(previousMessages => [...previousMessages, newUserMessage]);
+    setIsAssistantTyping(true);
 
     try {
-      const body: { message: string; document_id?: number } = { message }
-      if (activeDocumentumentumentId) body.document_id = activeDocumentumentumentId
-      const data = await fetchFromApi('/ai/chat', { method: 'POST', body: JSON.stringify(body) })
-      setChatMessages(prev => [...prev, { role: 'assistant', content: data.answer }])
-      setLearningProgress(prev => ({ ...prev, totalChats: prev.totalChats + 1 }))
-    } catch (err) {
-      setChatMessages(prev => [...prev, { role: 'assistant', content: '⚠ Có lỗi xảy ra. Vui lòng thử lại.' }])
+      const requestPayload: { message: string; document_id?: number } = { message: messageContent };
+      if (activeDocumentId) {
+        requestPayload.document_id = activeDocumentId;
+      }
+      
+      const aiResponse = await fetchFromApi('/ai/chat', { 
+        method: 'POST', 
+        body: JSON.stringify(requestPayload) 
+      });
+      
+      setChatMessages(previousMessages => [
+        ...previousMessages, 
+        { role: 'assistant', content: aiResponse.answer }
+      ]);
+      setLearningProgress(previousProgress => ({ 
+        ...previousProgress, 
+        totalChats: previousProgress.totalChats + 1 
+      }));
+    } catch (error) {
+      setChatMessages(previousMessages => [
+        ...previousMessages, 
+        { role: 'assistant', content: 'An error occurred while generating the response. Please try again.' }
+      ]);
     } finally {
-      setIsAssistantTyping(false)
+      setIsAssistantTyping(false);
     }
   }
 
   async function requestDocumentSummary() {
-    if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
-    setActiveTool('summary')
-    setIsToolProcessing(true)
-    setToolResultContent('')
+    if (!activeDocumentId) return alert('Please select a document first.');
+    
+    setActiveTool('summary');
+    setIsToolProcessing(true);
+    setToolResultContent('');
+    
     try {
-      const data = await fetchFromApi('/ai/summarize', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentumentumentId }) })
-      setToolResultContent(data.summary)
-    } catch { setToolResultContent('Không thể tạo tóm tắt. Thử lại sau.') }
-    finally { setIsToolProcessing(false) }
+      const summaryResponse = await fetchFromApi('/ai/summarize', { 
+        method: 'POST', 
+        body: JSON.stringify({ document_id: activeDocumentId }) 
+      });
+      setToolResultContent(summaryResponse.summary);
+    } catch (error) {
+      setToolResultContent('Failed to generate summary. Please try again later.');
+    } finally {
+      setIsToolProcessing(false);
+    }
   }
 
   async function requestQuizGeneration() {
-    if (!activeDocumentumentumentId) return alert('Chọn tài liệu trước')
-    setActiveTool('quiz')
-    setIsToolProcessing(true)
-    setToolResultContent('')
+    if (!activeDocumentId) return alert('Please select a document first.');
+    
+    setActiveTool('quiz');
+    setIsToolProcessing(true);
+    setToolResultContent('');
+    
     try {
-      const data = await fetchFromApi('/ai/generate-quiz', { method: 'POST', body: JSON.stringify({ document_id: activeDocumentumentumentId, num_questions: 5 }) })
-      const formatted = data.questions.map((q: { question: string; options: string[]; explanation: string }, i: number) =>
-        `${i + 1}. ${q.question}\n${q.options.map((opt: string, j: number) => `   ${String.fromCharCode(65 + j)}. ${opt}`).join('\n')}\n→ ${q.explanation}`
-      ).join('\n\n')
-      setToolResultContent(formatted)
-      setLearningProgress(prev => ({ ...prev, totalQuizzes: prev.totalQuizzes + data.questions.length }))
-    } catch { setToolResultContent('Không thể tạo quiz. Thử lại sau.') }
-    finally { setIsToolProcessing(false) }
+      const quizResponse = await fetchFromApi('/ai/generate-quiz', { 
+        method: 'POST', 
+        body: JSON.stringify({ document_id: activeDocumentId, num_questions: 5 }) 
+      });
+      
+      const formattedQuizContent = quizResponse.questions.map((quizItem: { question: string; options: string[]; explanation: string }, index: number) => {
+        const optionsList = quizItem.options.map((optionText: string, optionIndex: number) => 
+          `   ${String.fromCharCode(65 + optionIndex)}. ${optionText}`
+        ).join('\n');
+        return `${index + 1}. ${quizItem.question}\n${optionsList}\n\n**Explanation**: ${quizItem.explanation}`;
+      }).join('\n\n---\n\n');
+      
+      setToolResultContent(formattedQuizContent);
+      setLearningProgress(previousProgress => ({ 
+        ...previousProgress, 
+        totalQuizzes: previousProgress.totalQuizzes + quizResponse.questions.length 
+      }));
+    } catch (error) {
+      setToolResultContent('Failed to generate quiz. Please try again later.');
+    } finally {
+      setIsToolProcessing(false);
+    }
   }
 
-  function handleTextareaKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitChatMessage() }
+  function handleChatInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Enter' && !event.shiftKey) { 
+      event.preventDefault(); 
+      submitChatMessage(); 
+    }
   }
 
-  function handleTextareaInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setChatInputValue(e.target.value)
-    e.target.style.height = 'auto'
-    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+  function handleChatInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setChatInputValue(event.target.value);
+    event.target.style.height = 'auto';
+    event.target.style.height = `${Math.min(event.target.scrollHeight, 120)}px`;
   }
 
-  const activeDocumentument = documents.find(d => d.id === activeDocumentumentumentId)
+  const activeDocument = documents.find(doc => doc.id === activeDocumentId);
+  const displayName = currentUser?.fullName || currentUser?.username || 'User';
+  const initialLetter = displayName.charAt(0).toUpperCase();
+
+  const baseFontFamily = {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  };
 
   return (
-    <div className="workspace-layout">
-      {/* Top bar */}
-      <header className="topbar">
-        <div className="topbar-left">
-          <button onClick={() => setIsSidebarVisible(s => !s)} className="btn btn-icon" title="Toggle sidebar" aria-label="Toggle sidebar">
+    <div className="flex flex-col h-screen bg-white text-[#24292f]" style={baseFontFamily}>
+      <header className="flex items-center justify-between px-4 py-3 border-b border-[#d0d7de] bg-[#f6f8fa]">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+            className="p-1 text-[#57606a] hover:text-[#24292f] rounded-md hover:bg-[#ebecf0] transition-colors"
+            aria-label="Toggle sidebar"
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="3" y1="12" x2="21" y2="12"></line>
               <line x1="3" y1="6" x2="21" y2="6"></line>
               <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
-
-          <div className="brand-container">
+          
+          <div className="flex items-center gap-2 font-semibold text-[16px]">
             <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="8" fill="var(--primary)"/>
+              <rect width="28" height="28" rx="6" fill="#24292f"/>
               <path d="M8 20L14 8L20 20M10.5 15.5H17.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
-            <span className="brand-label">LearnOS</span>
+            <span>LearnOS</span>
           </div>
 
-          {activeDocumentument && (
-            <div className="breadcrumb">
-              <span className="breadcrumb-item" title={activeDocumentument.title}>{activeDocumentument.title}</span>
+          {activeDocument && (
+            <div className="hidden md:flex items-center gap-2 text-sm text-[#57606a] ml-4 before:content-['/'] before:mr-2 before:text-[#d0d7de]">
+              <span className="truncate max-w-[300px]" title={activeDocument.title}>
+                {activeDocument.title}
+              </span>
             </div>
           )}
         </div>
 
-        <div className="topbar-right">
-          <div className="user-badge">
-            <div className="avatar">{currentUser?.username?.[0]?.toUpperCase() ?? 'U'}</div>
-            <span className="username">{currentUser?.username ?? '...'}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-6 h-6 rounded-full bg-[#d0d7de] text-[#24292f] flex items-center justify-center font-medium text-xs">
+              {initialLetter}
+            </div>
+            <span className="hidden sm:inline font-medium text-[#24292f]">{currentUser?.username || '...'}</span>
           </div>
-          <button onClick={onLogout} className="btn btn-secondary" style={{ padding: 'var(--space-1) var(--space-3)' }}>
-            Đăng xuất
+          <button 
+            onClick={onLogout}
+            className="px-3 py-1 text-sm font-medium text-[#24292f] bg-[#f6f8fa] border border-[#d0d7de] rounded-md hover:bg-[#f3f4f6] transition-colors shadow-sm"
+          >
+            Sign out
           </button>
         </div>
       </header>
 
-      {/* Main workspace layer */}
-      <div className="workspace-body">
-        
-        {/* Sidebar Panel */}
-        <aside className={`sidebar ${isSidebarVisible ? '' : 'hidden'}`}>
-          <div className="sidebar-header">
-            <span className="sidebar-title">Tài liệu của bạn</span>
-            <span className="badge badge-blue">{documents.length}</span>
-          </div>
-
-          <div className="upload-zone">
-            <input
-              ref={fileUploadInputRef}
-              type="file"
-              accept=".pdf,.txt,.md,.docx"
-              onChange={handleFileUpload}
-              style={{ display: 'none' }}
-              aria-label="Upload document"
-            />
-            <button
-              onClick={() => fileUploadInputRef.current?.click()}
-              disabled={isUploadingDocument}
-              className="btn btn-secondary"
-              style={{ width: '100%', justifyContent: 'center' }}
-            >
-              {isUploadingDocument ? (
-                <><span className="spinner" style={{ color: 'var(--text-muted)' }} /> Đang xử lý…</>
-              ) : (
-                <>+ Thêm tài liệu mới</>
-              )}
-            </button>
-            <p className="upload-hint">PDF, TXT, DOCX, MD</p>
-          </div>
-
-          <div className="doc-list">
-            {documents.length === 0 ? (
-              <div className="empty-state">
-                <p className="empty-text">Chưa có tài liệu nào.</p>
-                <p className="upload-hint">Upload file để bắt đầu.</p>
+      <div className="flex flex-1 overflow-hidden">
+        {isSidebarVisible && (
+          <aside className="w-72 flex flex-col border-r border-[#d0d7de] bg-[#f6f8fa] shrink-0">
+            <div className="p-4 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-[#24292f]">Documents</h2>
+                <span className="px-2 py-0.5 text-xs font-medium bg-[#ddf4ff] text-[#0969da] rounded-full">
+                  {documents.length}
+                </span>
               </div>
-            ) : (
-              documents.map(doc => (
-                <div
-                  key={doc.id}
-                  onClick={() => handleDocumentSelection(doc.id)}
-                  className={`doc-item ${doc.id === activeDocumentumentumentId ? 'active' : ''}`}
+
+              <div>
+                <input
+                  ref={fileUploadInputRef}
+                  type="file"
+                  accept=".pdf,.txt,.md,.docx"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  aria-label="Upload document"
+                />
+                <button
+                  onClick={() => fileUploadInputRef.current?.click()}
+                  disabled={isUploadingDocument}
+                  className="w-full py-1.5 px-3 text-sm font-medium text-[#24292f] bg-white border border-[#d0d7de] rounded-md hover:bg-[#f3f4f6] transition-colors shadow-sm disabled:opacity-50 flex justify-center items-center gap-2"
                 >
-                  <span className={`badge ${doc.id === activeDocumentumentumentId ? 'badge-blue' : 'badge-gray'}`}>
-                    {doc.fileType.toUpperCase()}
-                  </span>
-                  <span className="doc-name">{doc.title}</span>
-                  <button
-                    onClick={(e) => handleDocumentDeletion(doc.id, e)}
-                    className="delete-btn"
-                    title="Xoá tài liệu"
-                    aria-label="Delete document"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="stats-block">
-            <div className="sidebar-title" style={{ marginBottom: 'var(--space-2)' }}>Thống kê học tập</div>
-            {[
-              { label: 'Tài liệu', value: learningProgress.totalDocuments },
-              { label: 'Lượt chat', value: learningProgress.totalChats },
-              { label: 'Bài quiz', value: learningProgress.totalQuizzes },
-              { label: 'Độ chính xác', value: `${learningProgress.accuracy}%` },
-            ].map(stat => (
-              <div key={stat.label} className="stat-row">
-                <span className="stat-label">{stat.label}</span>
-                <span className="stat-value">{stat.value}</span>
+                  {isUploadingDocument ? 'Uploading...' : 'Add document'}
+                </button>
               </div>
-            ))}
-          </div>
-        </aside>
+            </div>
 
-        {/* Central Chat Panel */}
-        <main className="chat-main">
-          <div className="chat-header">
+            <div className="flex-1 overflow-y-auto px-3 pb-4">
+              {documents.length === 0 ? (
+                <div className="text-center py-8 px-4 text-sm text-[#57606a]">
+                  No documents found. Upload a file to get started.
+                </div>
+              ) : (
+                <ul className="space-y-1">
+                  {documents.map(doc => {
+                    const isActive = doc.id === activeDocumentId;
+                    return (
+                      <li key={doc.id}>
+                        <div
+                          onClick={() => handleDocumentSelection(doc.id)}
+                          className={`group flex items-center justify-between p-2 rounded-md cursor-pointer text-sm transition-colors ${
+                            isActive ? 'bg-[#ddf4ff] text-[#0969da]' : 'hover:bg-[#ebecf0] text-[#24292f]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <span className={`shrink-0 px-1.5 py-0.5 text-[10px] font-medium uppercase rounded border ${
+                              isActive ? 'border-[#54aeff] text-[#0969da]' : 'border-[#d0d7de] text-[#57606a]'
+                            }`}>
+                              {doc.fileType}
+                            </span>
+                            <span className="truncate">{doc.title}</span>
+                          </div>
+                          <button
+                            onClick={(e) => handleDocumentDeletion(doc.id, e)}
+                            className={`shrink-0 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity ${
+                              isActive ? 'hover:bg-[#b6e3ff]' : 'hover:bg-[#d0d7de]'
+                            }`}
+                            aria-label="Delete document"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-[#d0d7de]">
+              <h2 className="text-xs font-semibold text-[#57606a] uppercase tracking-wider mb-3">
+                Learning Stats
+              </h2>
+              <ul className="space-y-2 text-sm">
+                <li className="flex justify-between">
+                  <span className="text-[#57606a]">Documents</span>
+                  <span className="font-medium text-[#24292f]">{learningProgress.totalDocuments}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-[#57606a]">Conversations</span>
+                  <span className="font-medium text-[#24292f]">{learningProgress.totalChats}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-[#57606a]">Quizzes Taken</span>
+                  <span className="font-medium text-[#24292f]">{learningProgress.totalQuizzes}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-[#57606a]">Accuracy</span>
+                  <span className="font-medium text-[#24292f]">{learningProgress.accuracy}%</span>
+                </li>
+              </ul>
+            </div>
+          </aside>
+        )}
+
+        <main className="flex-1 flex flex-col min-w-0 bg-white">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#d0d7de]">
             <div>
-              <p className="chat-title">Trợ lý AI</p>
-              <p className="chat-context">
-                {activeDocumentument ? `Đang tư vấn dựa trên: ${activeDocumentument.title}` : 'Vui lòng chọn tài liệu để bắt đầu'}
+              <h1 className="text-lg font-semibold text-[#24292f]">Assistant</h1>
+              <p className="text-sm text-[#57606a] mt-0.5">
+                {activeDocument ? `Analyzing: ${activeDocument.title}` : 'Select a document to begin'}
               </p>
             </div>
             {isAssistantTyping && (
-              <div className="badge badge-blue" style={{ fontSize: '11px', padding: 'var(--space-1) var(--space-3)', borderRadius: 'var(--radius-full)' }}>
-                <span className="spinner" style={{ width: 10, height: 10, marginRight: 6 }} /> Đang phân tích...
-              </div>
+              <span className="text-xs font-medium text-[#57606a] flex items-center gap-2">
+                Processing...
+              </span>
             )}
           </div>
 
-          <div className="chat-window">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {chatMessages.length === 0 && (
-              <div className="card welcome-card">
-                <div className="welcome-icon">◈</div>
-                <h3 className="welcome-title">Xin chào, {currentUser?.fullName || currentUser?.username}</h3>
-                <p className="welcome-text">
-                  {activeDocumentument
-                    ? `Bạn có thể đặt bất kỳ câu hỏi nào liên quan đến nội dung tài liệu "${activeDocumentument.title}". Tôi sẽ tìm kiếm và trả lời.`
-                    : 'Tải lên một tài liệu ở cột bên trái và chọn nó để bắt đầu trải nghiệm học tập cùng AI.'}
+              <div className="max-w-2xl mx-auto mt-12 p-8 border border-[#d0d7de] rounded-md bg-[#f6f8fa] text-center">
+                <div className="w-12 h-12 mx-auto mb-4 bg-[#24292f] text-white rounded-lg flex items-center justify-center">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-[#24292f] mb-2">Welcome, {displayName}</h2>
+                <p className="text-[#57606a] leading-relaxed">
+                  {activeDocument
+                    ? `Ask any questions about "${activeDocument.title}". The assistant will analyze the content and provide detailed answers.`
+                    : 'Upload a document from the sidebar to start your learning session.'}
                 </p>
               </div>
             )}
 
-            {chatMessages.map((msg, idx) => (
-              <div key={idx} className={`msg-row ${msg.role}`}>
-                {msg.role === 'assistant' && (
-                  <div className="avatar" style={{ borderRadius: 'var(--radius-lg)' }}>AI</div>
-                )}
-                <div className={`bubble ${msg.role}`}>
+            {chatMessages.map((msg, index) => (
+              <div key={index} className={`flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                  msg.role === 'assistant' ? 'bg-[#24292f] text-white rounded-md' : 'bg-[#d0d7de] text-[#24292f]'
+                }`}>
+                  {msg.role === 'assistant' ? 'AI' : initialLetter}
+                </div>
+                <div className={`flex-1 text-[15px] leading-relaxed px-4 py-3 rounded-md border ${
+                  msg.role === 'assistant' 
+                    ? 'bg-white border-[#d0d7de] text-[#24292f]' 
+                    : 'bg-[#f6f8fa] border-[#d0d7de] text-[#24292f]'
+                }`}>
                   {msg.role === 'assistant' ? (
-                    <div className="markdown-body">
+                    <div className="prose prose-sm max-w-none prose-headings:font-semibold prose-a:text-[#0969da]">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.content}
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    msg.content
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
                   )}
                 </div>
-                {msg.role === 'user' && (
-                  <div className="avatar" style={{ background: 'var(--text-main)' }}>
-                    {currentUser?.username?.[0]?.toUpperCase() ?? 'U'}
-                  </div>
-                )}
               </div>
             ))}
 
             {isAssistantTyping && (
-              <div className="msg-row assistant">
-                <div className="avatar" style={{ borderRadius: 'var(--radius-lg)' }}>AI</div>
-                <div className="bubble ai">
-                  <span className="typing-dots"><span /><span /><span /></span>
+              <div className="flex gap-4 max-w-4xl mx-auto">
+                <div className="shrink-0 w-8 h-8 rounded-md bg-[#24292f] text-white flex items-center justify-center text-xs font-medium">
+                  AI
+                </div>
+                <div className="px-4 py-3 border border-[#d0d7de] rounded-md bg-white flex items-center">
+                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse mr-1" />
+                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse mr-1" style={{ animationDelay: '0.2s' }} />
+                  <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
                 </div>
               </div>
             )}
             <div ref={chatScrollAnchorRef} />
           </div>
 
-          <div className="chat-input-bar">
-            <textarea
-              ref={chatTextareaRef}
-              value={chatInputValue}
-              onChange={handleTextareaInput}
-              onKeyDown={handleTextareaKeyDown}
-              placeholder={activeDocumentument ? `Hỏi về "${activeDocumentument.title}"…` : 'Nhập câu hỏi…'}
-              rows={1}
-              className="input-base chat-textarea"
-              disabled={!activeDocumentument}
-            />
-            <button
-              onClick={submitChatMessage}
-              disabled={isAssistantTyping || !chatInputValue.trim() || !activeDocumentument}
-              className="btn btn-primary"
-              style={{ width: 44, height: 44, padding: 0, borderRadius: 'var(--radius-xl)' }}
-              aria-label="Send message"
-            >
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="white">
-                <path d="M14 8L2 2L5.5 8L2 14L14 8Z" />
-              </svg>
-            </button>
+          <div className="p-4 bg-white border-t border-[#d0d7de]">
+            <div className="max-w-4xl mx-auto relative flex items-end gap-2">
+              <textarea
+                ref={chatTextareaRef}
+                value={chatInputValue}
+                onChange={handleChatInputChange}
+                onKeyDown={handleChatInputKeyDown}
+                placeholder={activeDocument ? `Ask a question about "${activeDocument.title}"...` : 'Type a message...'}
+                rows={1}
+                disabled={!activeDocument}
+                className="flex-1 max-h-32 p-3 pr-12 text-[15px] bg-[#f6f8fa] border border-[#d0d7de] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-transparent resize-none disabled:opacity-50 disabled:bg-[#f6f8fa]"
+              />
+              <button
+                onClick={submitChatMessage}
+                disabled={isAssistantTyping || !chatInputValue.trim() || !activeDocument}
+                className="absolute right-2 bottom-2 p-2 text-white bg-[#2da44e] rounded-md hover:bg-[#2c974b] disabled:opacity-50 disabled:hover:bg-[#2da44e] transition-colors"
+                aria-label="Send message"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M1.5 1.5l13 6.5-13 6.5v-4l9-2.5-9-2.5v-4z" />
+                </svg>
+              </button>
+            </div>
+            <div className="text-center mt-2 text-xs text-[#57606a]">
+              AI assistant may provide inaccurate information. Verify before trusting.
+            </div>
           </div>
         </main>
 
-        {/* Right Tools Panel */}
-        <aside className="tool-panel">
-          <div className="sidebar-header">
-            <span className="sidebar-title">Công cụ AI Học Tập</span>
+        <aside className="w-80 border-l border-[#d0d7de] bg-white flex flex-col shrink-0">
+          <div className="px-4 py-3 border-b border-[#d0d7de] bg-[#f6f8fa]">
+            <h2 className="text-sm font-semibold text-[#24292f]">Learning Tools</h2>
           </div>
 
-          <div className="tool-actions">
+          <div className="p-4 space-y-3">
             <button
               onClick={requestDocumentSummary}
-              disabled={!activeDocumentumentumentId || isToolProcessing}
-              className="btn btn-secondary"
-              style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
+              disabled={!activeDocumentId || isToolProcessing}
+              className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-[#24292f] border border-[#d0d7de] rounded-md hover:bg-[#f6f8fa] disabled:opacity-50 transition-colors shadow-sm"
             >
-              <span style={{ color: 'var(--primary)' }}>◎</span> Tóm tắt tài liệu
+              <span className="text-[#0969da]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+              </span>
+              Generate Summary
             </button>
             <button
               onClick={requestQuizGeneration}
-              disabled={!activeDocumentumentumentId || isToolProcessing}
-              className="btn btn-secondary"
-              style={{ justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
+              disabled={!activeDocumentId || isToolProcessing}
+              className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-[#24292f] border border-[#d0d7de] rounded-md hover:bg-[#f6f8fa] disabled:opacity-50 transition-colors shadow-sm"
             >
-              <span style={{ color: 'var(--primary)' }}>⚡</span> Tạo bài tập (Quiz)
+              <span className="text-[#2da44e]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </span>
+              Generate Practice Quiz
             </button>
           </div>
 
           {activeTool && (
-            <div className="card tool-output">
-              <div className="tool-output-head">
-                <span className="sidebar-title" style={{ color: 'var(--primary)' }}>
-                  {activeTool === 'summary' ? '◎ BẢN TÓM TẮT' : '⚡ BÀI TẬP QUIZ'}
-                </span>
-                <button onClick={() => setActiveTool(null)} className="btn btn-icon" style={{ width: 24, height: 24 }}>✕</button>
+            <div className="flex-1 flex flex-col border-t border-[#d0d7de] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#f6f8fa] border-b border-[#d0d7de]">
+                <h3 className="text-sm font-semibold text-[#24292f]">
+                  {activeTool === 'summary' ? 'Document Summary' : 'Practice Quiz'}
+                </h3>
+                <button 
+                  onClick={() => setActiveTool(null)}
+                  className="p-1 text-[#57606a] hover:text-[#24292f] rounded-md hover:bg-[#ebecf0]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <div className="tool-output-body">
+              <div className="flex-1 overflow-y-auto p-4 text-[14px]">
                 {isToolProcessing ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="spinner" style={{ color: 'var(--primary)', width: 14, height: 14 }} />
-                    Đang AI đang phân tích…
+                  <div className="flex items-center gap-2 text-[#57606a] text-sm">
+                    <span className="w-3 h-3 border-2 border-[#d0d7de] border-t-[#24292f] rounded-full animate-spin" />
+                    Processing request...
                   </div>
                 ) : (
-                  <div className="markdown-body">
+                  <div className="prose prose-sm max-w-none text-[#24292f]">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {toolResultContent}
                     </ReactMarkdown>
@@ -476,8 +637,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             </div>
           )}
         </aside>
-
       </div>
     </div>
-  )
+  );
 }
