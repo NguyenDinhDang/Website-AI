@@ -330,7 +330,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-            className="p-1 text-[#57606a] hover:text-[#24292f] rounded-md hover:bg-[#ebecf0] transition-colors"
+            className="p-1 text-[#57606a] hover:text-[#24292f] rounded-xl hover:bg-[#ebecf0] transition-colors"
             aria-label="Toggle sidebar"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -366,7 +366,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
           </div>
           <button 
             onClick={onLogout}
-            className="px-3 py-1 text-sm font-medium text-[#24292f] bg-[#f6f8fa] border border-[#d0d7de] rounded-md hover:bg-[#f3f4f6] transition-colors shadow-sm"
+            className="px-3 py-1 text-sm font-medium text-[#24292f] bg-[#f6f8fa] border border-[#d0d7de] rounded-xl hover:bg-[#f3f4f6] transition-colors shadow-sm"
           >
             Sign out
           </button>
@@ -396,7 +396,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 <button
                   onClick={() => fileUploadInputRef.current?.click()}
                   disabled={isUploadingDocument}
-                  className="w-full py-1.5 px-3 text-sm font-medium text-[#24292f] bg-white border border-[#d0d7de] rounded-md hover:bg-[#f3f4f6] transition-colors shadow-sm disabled:opacity-50 flex justify-center items-center gap-2"
+                  className="w-full py-1.5 px-3 text-sm font-medium text-[#24292f] bg-white border border-[#d0d7de] rounded-xl hover:bg-[#f3f4f6] transition-colors shadow-sm disabled:opacity-50 flex justify-center items-center gap-2"
                 >
                   {isUploadingDocument ? 'Uploading...' : 'Add document'}
                 </button>
@@ -416,7 +416,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                       <li key={doc.id}>
                         <div
                           onClick={() => handleDocumentSelection(doc.id)}
-                          className={`group flex items-center justify-between p-2 rounded-md cursor-pointer text-sm transition-colors ${
+                          className={`group flex items-center justify-between p-2 rounded-xl cursor-pointer text-sm transition-colors ${
                             isActive ? 'bg-[#ddf4ff] text-[#0969da]' : 'hover:bg-[#ebecf0] text-[#24292f]'
                           }`}
                         >
@@ -430,7 +430,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                           </div>
                           <button
                             onClick={(e) => handleDocumentDeletion(doc.id, e)}
-                            className={`shrink-0 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity ${
+                            className={`shrink-0 p-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity ${
                               isActive ? 'hover:bg-[#b6e3ff]' : 'hover:bg-[#d0d7de]'
                             }`}
                             aria-label="Delete document"
@@ -490,7 +490,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {chatMessages.length === 0 && (
-              <div className="max-w-2xl mx-auto mt-12 p-8 border border-[#d0d7de] rounded-md bg-[#f6f8fa] text-center">
+              <div className="max-w-2xl mx-auto mt-12 p-8 border border-[#d0d7de] rounded-xl bg-[#f6f8fa] text-center">
                 <div className="w-12 h-12 mx-auto mb-4 bg-[#24292f] text-white rounded-lg flex items-center justify-center">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -508,11 +508,11 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             {chatMessages.map((msg, index) => (
               <div key={index} className={`flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                  msg.role === 'assistant' ? 'bg-[#24292f] text-white rounded-md' : 'bg-[#d0d7de] text-[#24292f]'
+                  msg.role === 'assistant' ? 'bg-[#24292f] text-white rounded-xl' : 'bg-[#d0d7de] text-[#24292f]'
                 }`}>
                   {msg.role === 'assistant' ? 'AI' : initialLetter}
                 </div>
-                <div className={`flex-1 text-[15px] leading-relaxed px-4 py-3 rounded-md border ${
+                <div className={`flex-1 text-[15px] leading-relaxed px-4 py-3 rounded-xl border ${
                   msg.role === 'assistant' 
                     ? 'bg-white border-[#d0d7de] text-[#24292f]' 
                     : 'bg-[#f6f8fa] border-[#d0d7de] text-[#24292f]'
@@ -532,10 +532,10 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
 
             {isAssistantTyping && (
               <div className="flex gap-4 max-w-4xl mx-auto">
-                <div className="shrink-0 w-8 h-8 rounded-md bg-[#24292f] text-white flex items-center justify-center text-xs font-medium">
+                <div className="shrink-0 w-8 h-8 rounded-xl bg-[#24292f] text-white flex items-center justify-center text-xs font-medium">
                   AI
                 </div>
-                <div className="px-4 py-3 border border-[#d0d7de] rounded-md bg-white flex items-center">
+                <div className="px-4 py-3 border border-[#d0d7de] rounded-xl bg-white flex items-center">
                   <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse mr-1" />
                   <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse mr-1" style={{ animationDelay: '0.2s' }} />
                   <span className="w-2 h-2 bg-[#d0d7de] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
@@ -555,12 +555,12 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 placeholder={activeDocument ? `Ask a question about "${activeDocument.title}"...` : 'Type a message...'}
                 rows={1}
                 disabled={!activeDocument}
-                className="flex-1 max-h-32 p-3 pr-12 text-[15px] bg-[#f6f8fa] border border-[#d0d7de] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-transparent resize-none disabled:opacity-50 disabled:bg-[#f6f8fa]"
+                className="flex-1 max-h-32 p-3 pr-12 text-[15px] bg-[#f6f8fa] border border-[#d0d7de] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-transparent resize-none disabled:opacity-50 disabled:bg-[#f6f8fa]"
               />
               <button
                 onClick={submitChatMessage}
                 disabled={isAssistantTyping || !chatInputValue.trim() || !activeDocument}
-                className="absolute right-2 bottom-2 p-2 text-white bg-[#2da44e] rounded-md hover:bg-[#2c974b] disabled:opacity-50 disabled:hover:bg-[#2da44e] transition-colors"
+                className="absolute right-2 bottom-2 p-2 text-white bg-[#2da44e] rounded-xl hover:bg-[#2c974b] disabled:opacity-50 disabled:hover:bg-[#2da44e] transition-colors"
                 aria-label="Send message"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -583,7 +583,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             <button
               onClick={requestDocumentSummary}
               disabled={!activeDocumentId || isToolProcessing}
-              className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-[#24292f] border border-[#d0d7de] rounded-md hover:bg-[#f6f8fa] disabled:opacity-50 transition-colors shadow-sm"
+              className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-[#24292f] border border-[#d0d7de] rounded-xl hover:bg-[#f6f8fa] disabled:opacity-50 transition-colors shadow-sm"
             >
               <span className="text-[#0969da]">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -595,7 +595,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
             <button
               onClick={requestQuizGeneration}
               disabled={!activeDocumentId || isToolProcessing}
-              className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-[#24292f] border border-[#d0d7de] rounded-md hover:bg-[#f6f8fa] disabled:opacity-50 transition-colors shadow-sm"
+              className="w-full flex items-center gap-3 p-3 text-left text-sm font-medium text-[#24292f] border border-[#d0d7de] rounded-xl hover:bg-[#f6f8fa] disabled:opacity-50 transition-colors shadow-sm"
             >
               <span className="text-[#2da44e]">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -614,7 +614,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
                 </h3>
                 <button 
                   onClick={() => setActiveTool(null)}
-                  className="p-1 text-[#57606a] hover:text-[#24292f] rounded-md hover:bg-[#ebecf0]"
+                  className="p-1 text-[#57606a] hover:text-[#24292f] rounded-xl hover:bg-[#ebecf0]"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6L6 18M6 6l12 12" />
