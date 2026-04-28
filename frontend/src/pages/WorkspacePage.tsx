@@ -105,7 +105,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
     } catch { setChatMessages([]) }
   }
 
-  async function handleSelectDoc(docId: number) {
+  async function handleDocumentSelection(docId: number) {
     setActiveDocumentId(docId)
     setActiveTool(null)
     setToolResultContent('')
@@ -301,7 +301,7 @@ export function WorkspacePage({ onLogout }: WorkspaceProps) {
               documents.map(doc => (
                 <div
                   key={doc.id}
-                  onClick={() => handleSelectDoc(doc.id)}
+                  onClick={() => handleDocumentSelection(doc.id)}
                   className={`doc-item ${doc.id === activeDocumentumentumentId ? 'active' : ''}`}
                 >
                   <span className={`badge ${doc.id === activeDocumentumentumentId ? 'badge-blue' : 'badge-gray'}`}>
